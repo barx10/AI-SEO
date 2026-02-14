@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AI_SEO_VERSION', '2.0.0' );
+define( 'AI_SEO_VERSION', '2.1.0' );
 define( 'AI_SEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
