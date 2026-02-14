@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AI_SEO_VERSION', '2.1.0' );
+define( 'AI_SEO_VERSION', '2.2.0' );
 define( 'AI_SEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -211,6 +211,50 @@ function ai_seo_ajax_suggest_title() {
     wp_send_json_success( array( 'text' => sanitize_text_field( $result ) ) );
 }
 add_action( 'wp_ajax_ai_seo_suggest_title', 'ai_seo_ajax_suggest_title' );
+
+/**
+ * AJAX handler: Suggest focus keyword.
+ */
+function ai_seo_ajax_suggest_keyword() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
+    }
+
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Innlegget ble ikke funnet.' );
+    }
+
+    $content = wp_strip_all_tags( $post->post_content );
+    $content = mb_substr( $content, 0, 3000 );
+    $title   = $post->post_title;
+
+    $prompt = "Du er en SEO-ekspert. Basert på tittelen og innholdet nedenfor, foreslå det beste fokus-søkeordet (1–3 ord) for denne siden. Søkeordet skal være det mest relevante søkeordet brukere vil søke etter i Google for å finne denne siden. Svar KUN med selve søkeordet – ingen forklaring, ingen anførselstegn, ingen ekstra tekst.\n\nTittel: " . $title . "\n\nInnhold:\n" . $content;
+
+    $client = new AI_SEO_Client();
+    $result = $client->send_request( $prompt );
+
+    if ( is_wp_error( $result ) ) {
+        wp_send_json_error( $result->get_error_message() );
+    }
+
+    $keyword = sanitize_text_field( trim( $result ) );
+
+    wp_send_json_success( array( 'keyword' => $keyword ) );
+}
+add_action( 'wp_ajax_ai_seo_suggest_keyword', 'ai_seo_ajax_suggest_keyword' );
 
 /**
  * AJAX handler: Analyze keywords.

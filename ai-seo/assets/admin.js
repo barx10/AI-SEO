@@ -36,15 +36,17 @@
         }
 
         // --- AI Action Buttons ---
-        var btnGenDesc      = document.getElementById('ai-seo-generate-desc');
-        var btnSuggestTitle = document.getElementById('ai-seo-suggest-title');
-        var btnAnalyze      = document.getElementById('ai-seo-analyze-keywords');
-        var btnSuggestLinks = document.getElementById('ai-seo-suggest-links');
-        var spinner         = document.getElementById('ai-seo-spinner');
-        var resultBox       = document.getElementById('ai-seo-result');
-        var errorBox        = document.getElementById('ai-seo-error');
+        var btnGenDesc        = document.getElementById('ai-seo-generate-desc');
+        var btnSuggestTitle   = document.getElementById('ai-seo-suggest-title');
+        var btnSuggestKeyword = document.getElementById('ai-seo-suggest-keyword');
+        var btnAnalyze        = document.getElementById('ai-seo-analyze-keywords');
+        var btnSuggestLinks   = document.getElementById('ai-seo-suggest-links');
+        var spinner           = document.getElementById('ai-seo-spinner');
+        var resultBox         = document.getElementById('ai-seo-result');
+        var errorBox          = document.getElementById('ai-seo-error');
+        var keywordInput      = document.getElementById('ai_seo_focus_keyword');
 
-        var allButtons = [btnGenDesc, btnSuggestTitle, btnAnalyze, btnSuggestLinks];
+        var allButtons = [btnGenDesc, btnSuggestTitle, btnSuggestKeyword, btnAnalyze, btnSuggestLinks];
 
         if (btnGenDesc) {
             btnGenDesc.addEventListener('click', function () {
@@ -69,6 +71,20 @@
                     keyword: keyword ? keyword.value : ''
                 }, function (data) {
                     showResult(data.text, true);
+                });
+            });
+        }
+
+        if (btnSuggestKeyword) {
+            btnSuggestKeyword.addEventListener('click', function () {
+                var postId = this.dataset.postId;
+                doAjax('ai_seo_suggest_keyword', { post_id: postId }, function (data) {
+                    if (keywordInput && data.keyword) {
+                        keywordInput.value = data.keyword;
+                        keywordInput.dispatchEvent(new Event('input'));
+                    }
+                    showResult('Fokusord satt: ' + data.keyword);
+                    refreshSeoScore();
                 });
             });
         }

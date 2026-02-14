@@ -244,6 +244,9 @@ class AI_SEO_Meta_Box {
                     <button type="button" class="button button-secondary" id="ai-seo-suggest-title" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
                         Foreslå tittel
                     </button>
+                    <button type="button" class="button button-secondary" id="ai-seo-suggest-keyword" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
+                        Foreslå fokusord
+                    </button>
                     <button type="button" class="button button-secondary" id="ai-seo-analyze-keywords" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
                         Analyser søkeord
                     </button>
