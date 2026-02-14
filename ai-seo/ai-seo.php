@@ -310,6 +310,37 @@ function ai_seo_ajax_suggest_links() {
 add_action( 'wp_ajax_ai_seo_suggest_links', 'ai_seo_ajax_suggest_links' );
 
 /**
+ * AJAX handler: Refresh SEO score and checklist.
+ */
+function ai_seo_ajax_refresh_score() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    $post_id          = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $meta_title       = isset( $_POST['meta_title'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_title'] ) ) : '';
+    $meta_description = isset( $_POST['meta_description'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_description'] ) ) : '';
+    $focus_keyword    = isset( $_POST['focus_keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['focus_keyword'] ) ) : '';
+
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Innlegget ble ikke funnet.' );
+    }
+
+    // SEO score with current (unsaved) field values.
+    $seo_score = AI_SEO_Score::analyze( $post, $focus_keyword, $meta_title, $meta_description );
+
+    wp_send_json_success( $seo_score );
+}
+add_action( 'wp_ajax_ai_seo_refresh_score', 'ai_seo_ajax_refresh_score' );
+
+/**
  * Flush rewrite rules and create DB tables on activation.
  */
 function ai_seo_activate() {

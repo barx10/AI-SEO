@@ -55,6 +55,7 @@
                         descInput.dispatchEvent(new Event('input'));
                     }
                     showResult('Metabeskrivelse generert: ' + data.text);
+                    refreshSeoScore();
                 });
             });
         }
@@ -290,6 +291,92 @@
                 }
                 removeBtn.style.display = 'none';
             });
+        }
+
+        // --- Refresh SEO Score ---
+        var btnRefreshScore = document.getElementById('ai-seo-refresh-score');
+        var scoreBadge      = document.getElementById('ai-seo-score-badge');
+        var scoreValue      = document.getElementById('ai-seo-score-value');
+        var checklist       = document.getElementById('ai-seo-checklist');
+
+        function refreshSeoScore() {
+            if (!btnRefreshScore || !checklist) return;
+
+            var postId  = btnRefreshScore.dataset.postId;
+            var keyword = document.getElementById('ai_seo_focus_keyword');
+
+            var formData = new FormData();
+            formData.append('action', 'ai_seo_refresh_score');
+            formData.append('nonce', aiSeo.nonce);
+            formData.append('post_id', postId);
+            formData.append('meta_title', titleInput ? titleInput.value : '');
+            formData.append('meta_description', descInput ? descInput.value : '');
+            formData.append('focus_keyword', keyword ? keyword.value : '');
+
+            btnRefreshScore.disabled = true;
+            btnRefreshScore.textContent = 'Oppdaterer…';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', aiSeo.ajaxUrl, true);
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== 4) return;
+
+                btnRefreshScore.disabled = false;
+                btnRefreshScore.textContent = 'Oppdater analyse';
+
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success && response.data) {
+                            renderSeoScore(response.data);
+                        }
+                    } catch (e) {
+                        // Silently fail.
+                    }
+                }
+            };
+
+            xhr.send(formData);
+        }
+
+        function renderSeoScore(data) {
+            // Update score number.
+            if (scoreValue) {
+                scoreValue.textContent = data.score;
+            }
+
+            // Update badge color.
+            if (scoreBadge) {
+                scoreBadge.className = 'ai-seo-readability-score ai-seo-score-' + data.rating;
+            }
+
+            // Update checklist.
+            if (checklist && data.checks) {
+                var html = '';
+                data.checks.forEach(function (check) {
+                    var cls  = check.pass ? 'pass' : 'fail';
+                    var icon = check.pass ? '&#10004;' : '&#10008;';
+                    html += '<li class="ai-seo-check-' + cls + '">';
+                    html += '<span class="ai-seo-check-icon">' + icon + '</span>';
+                    html += escapeHtml(check.label);
+                    if (check.detail) {
+                        html += ' <span class="ai-seo-check-detail">(' + escapeHtml(check.detail) + ')</span>';
+                    }
+                    html += '</li>';
+                });
+                checklist.innerHTML = html;
+            }
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        if (btnRefreshScore) {
+            btnRefreshScore.addEventListener('click', refreshSeoScore);
         }
 
         // --- Copy cornerstone URL to clipboard ---

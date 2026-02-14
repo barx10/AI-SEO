@@ -171,11 +171,16 @@ class AI_SEO_Meta_Box {
 
             <!-- SEO Score / Checklist -->
             <div class="ai-seo-seo-score">
-                <h4>SEO-analyse</h4>
-                <div class="ai-seo-readability-score ai-seo-score-<?php echo esc_attr( $seo_score['rating'] ); ?>">
-                    <strong>SEO-score: <?php echo esc_html( $seo_score['score'] ); ?>/100</strong>
+                <h4>
+                    SEO-analyse
+                    <button type="button" class="button button-small" id="ai-seo-refresh-score" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-left:10px;">
+                        Oppdater analyse
+                    </button>
+                </h4>
+                <div class="ai-seo-readability-score ai-seo-score-<?php echo esc_attr( $seo_score['rating'] ); ?>" id="ai-seo-score-badge">
+                    <strong>SEO-score: <span id="ai-seo-score-value"><?php echo esc_html( $seo_score['score'] ); ?></span>/100</strong>
                 </div>
-                <ul class="ai-seo-checklist">
+                <ul class="ai-seo-checklist" id="ai-seo-checklist">
                     <?php foreach ( $seo_score['checks'] as $check ) : ?>
                         <li class="ai-seo-check-<?php echo $check['pass'] ? 'pass' : 'fail'; ?>">
                             <span class="ai-seo-check-icon"><?php echo $check['pass'] ? '&#10004;' : '&#10008;'; ?></span>
