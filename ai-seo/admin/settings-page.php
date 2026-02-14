@@ -26,68 +26,33 @@ class AI_SEO_Settings_Page {
         ) );
 
         // API section.
-        add_settings_section(
-            'ai_seo_api_section',
-            'API-innstillinger',
-            array( $this, 'render_api_section' ),
-            'ai-seo'
-        );
+        add_settings_section( 'ai_seo_api_section', 'API-innstillinger', array( $this, 'render_api_section' ), 'ai-seo' );
 
-        add_settings_field(
-            'ai_provider',
-            'AI-leverandør',
-            array( $this, 'render_provider_field' ),
-            'ai-seo',
-            'ai_seo_api_section'
-        );
-
-        add_settings_field(
-            'ai_model',
-            'Modell',
-            array( $this, 'render_model_field' ),
-            'ai-seo',
-            'ai_seo_api_section'
-        );
-
-        add_settings_field(
-            'api_key',
-            'API-nøkkel',
-            array( $this, 'render_api_key_field' ),
-            'ai-seo',
-            'ai_seo_api_section'
-        );
+        add_settings_field( 'ai_provider', 'AI-leverandør', array( $this, 'render_provider_field' ), 'ai-seo', 'ai_seo_api_section' );
+        add_settings_field( 'ai_model', 'Modell', array( $this, 'render_model_field' ), 'ai-seo', 'ai_seo_api_section' );
+        add_settings_field( 'api_key', 'API-nøkkel', array( $this, 'render_api_key_field' ), 'ai-seo', 'ai_seo_api_section' );
 
         // Modules section.
-        add_settings_section(
-            'ai_seo_modules_section',
-            'Moduler',
-            array( $this, 'render_modules_section' ),
-            'ai-seo'
-        );
+        add_settings_section( 'ai_seo_modules_section', 'Moduler', array( $this, 'render_modules_section' ), 'ai-seo' );
 
-        add_settings_field(
-            'enable_sitemap',
-            'XML-sitemap',
-            array( $this, 'render_sitemap_field' ),
-            'ai-seo',
-            'ai_seo_modules_section'
-        );
+        add_settings_field( 'enable_sitemap', 'XML-sitemap', array( $this, 'render_sitemap_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_schema', 'Schema.org-markering', array( $this, 'render_schema_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_opengraph', 'OpenGraph / Twitter Cards', array( $this, 'render_opengraph_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_breadcrumbs', 'Brødsmulesti', array( $this, 'render_breadcrumbs_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_redirects', 'Omdirigeringer', array( $this, 'render_redirects_field' ), 'ai-seo', 'ai_seo_modules_section' );
 
-        add_settings_field(
-            'enable_schema',
-            'Schema.org-markering',
-            array( $this, 'render_schema_field' ),
-            'ai-seo',
-            'ai_seo_modules_section'
-        );
+        // Social section.
+        add_settings_section( 'ai_seo_social_section', 'Sosiale medier', array( $this, 'render_social_section' ), 'ai-seo' );
 
-        add_settings_field(
-            'enable_opengraph',
-            'OpenGraph / Twitter Cards',
-            array( $this, 'render_opengraph_field' ),
-            'ai-seo',
-            'ai_seo_modules_section'
-        );
+        add_settings_field( 'twitter_handle', 'Twitter / X-brukernavn', array( $this, 'render_twitter_field' ), 'ai-seo', 'ai_seo_social_section' );
+
+        // Organization / LocalBusiness section.
+        add_settings_section( 'ai_seo_org_section', 'Organisasjon / Bedrift', array( $this, 'render_org_section' ), 'ai-seo' );
+
+        add_settings_field( 'schema_org_type', 'Organisasjonstype', array( $this, 'render_org_type_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_phone', 'Telefonnummer', array( $this, 'render_org_phone_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_email', 'E-post', array( $this, 'render_org_email_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_address', 'Adresse', array( $this, 'render_org_address_field' ), 'ai-seo', 'ai_seo_org_section' );
     }
 
     public function sanitize_options( $input ) {
@@ -106,7 +71,7 @@ class AI_SEO_Settings_Page {
             ? $input['ai_model']
             : 'claude-sonnet-4-5-20250929';
 
-        // Encrypt API key before storage.
+        // Encrypt API key.
         if ( ! empty( $input['api_key'] ) ) {
             $sanitized['api_key'] = wp_hash( '__ai_seo_salt__' ) !== $input['api_key']
                 ? self::encrypt_key( sanitize_text_field( $input['api_key'] ) )
@@ -115,20 +80,51 @@ class AI_SEO_Settings_Page {
             $sanitized['api_key'] = '';
         }
 
-        $sanitized['enable_sitemap']   = ! empty( $input['enable_sitemap'] ) ? 1 : 0;
-        $sanitized['enable_schema']    = ! empty( $input['enable_schema'] ) ? 1 : 0;
-        $sanitized['enable_opengraph'] = ! empty( $input['enable_opengraph'] ) ? 1 : 0;
+        // Modules.
+        $sanitized['enable_sitemap']     = ! empty( $input['enable_sitemap'] ) ? 1 : 0;
+        $sanitized['enable_schema']      = ! empty( $input['enable_schema'] ) ? 1 : 0;
+        $sanitized['enable_opengraph']   = ! empty( $input['enable_opengraph'] ) ? 1 : 0;
+        $sanitized['enable_breadcrumbs'] = ! empty( $input['enable_breadcrumbs'] ) ? 1 : 0;
+        $sanitized['enable_redirects']   = ! empty( $input['enable_redirects'] ) ? 1 : 0;
+
+        // Social.
+        $twitter = isset( $input['twitter_handle'] ) ? sanitize_text_field( $input['twitter_handle'] ) : '';
+        if ( ! empty( $twitter ) && strpos( $twitter, '@' ) !== 0 ) {
+            $twitter = '@' . $twitter;
+        }
+        $sanitized['twitter_handle'] = $twitter;
+
+        // Organization.
+        $allowed_org_types = array( '', 'Organization', 'LocalBusiness', 'Restaurant', 'Store', 'MedicalBusiness', 'LegalService', 'FinancialService' );
+        $sanitized['schema_org_type'] = isset( $input['schema_org_type'] ) && in_array( $input['schema_org_type'], $allowed_org_types, true )
+            ? $input['schema_org_type']
+            : '';
+
+        $sanitized['schema_org_phone']   = isset( $input['schema_org_phone'] ) ? sanitize_text_field( $input['schema_org_phone'] ) : '';
+        $sanitized['schema_org_email']   = isset( $input['schema_org_email'] ) ? sanitize_email( $input['schema_org_email'] ) : '';
+        $sanitized['schema_org_address'] = isset( $input['schema_org_address'] ) ? sanitize_text_field( $input['schema_org_address'] ) : '';
 
         return $sanitized;
     }
 
     /**
-     * Encrypt an API key using wp_hash as the basis for a simple XOR cipher.
+     * Encrypt an API key.
+     * Uses sodium if available, otherwise falls back to XOR.
      */
     public static function encrypt_key( $plain_key ) {
         if ( empty( $plain_key ) ) {
             return '';
         }
+
+        // Try sodium first.
+        if ( function_exists( 'sodium_crypto_secretbox' ) ) {
+            $key   = self::get_sodium_key();
+            $nonce = random_bytes( SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+            $encrypted = sodium_crypto_secretbox( $plain_key, $nonce, $key );
+            return 'sodium:' . base64_encode( $nonce . $encrypted );
+        }
+
+        // Fallback to XOR.
         $hash   = wp_hash( 'ai_seo_encryption_key' );
         $result = '';
         for ( $i = 0; $i < strlen( $plain_key ); $i++ ) {
@@ -144,6 +140,21 @@ class AI_SEO_Settings_Page {
         if ( empty( $encrypted_key ) ) {
             return '';
         }
+
+        // Check for sodium prefix.
+        if ( strpos( $encrypted_key, 'sodium:' ) === 0 && function_exists( 'sodium_crypto_secretbox_open' ) ) {
+            $key     = self::get_sodium_key();
+            $decoded = base64_decode( substr( $encrypted_key, 7 ) );
+            if ( false === $decoded || strlen( $decoded ) < SODIUM_CRYPTO_SECRETBOX_NONCEBYTES ) {
+                return '';
+            }
+            $nonce      = substr( $decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+            $ciphertext = substr( $decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+            $decrypted  = sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
+            return false === $decrypted ? '' : $decrypted;
+        }
+
+        // XOR fallback.
         $decoded = base64_decode( $encrypted_key );
         if ( false === $decoded ) {
             return '';
@@ -157,11 +168,41 @@ class AI_SEO_Settings_Page {
     }
 
     /**
-     * Get the raw stored (encrypted) key.
+     * Derive a sodium-compatible 32-byte key.
      */
+    private static function get_sodium_key() {
+        $salt = wp_hash( 'ai_seo_sodium_key_v1' );
+        return hash( 'sha256', $salt, true );
+    }
+
     private static function get_stored_key_raw() {
         $options = get_option( 'ai_seo_options', array() );
         return isset( $options['api_key'] ) ? $options['api_key'] : '';
+    }
+
+    /**
+     * Check rate limit for AI API calls.
+     *
+     * @return bool True if within limit, false if rate limited.
+     */
+    public static function check_rate_limit() {
+        $user_id   = get_current_user_id();
+        $key       = 'ai_seo_rate_' . $user_id;
+        $max_calls = 30; // Per minute.
+        $window    = 60;
+
+        $current = get_transient( $key );
+        if ( false === $current ) {
+            set_transient( $key, 1, $window );
+            return true;
+        }
+
+        if ( (int) $current >= $max_calls ) {
+            return false;
+        }
+
+        set_transient( $key, (int) $current + 1, $window );
+        return true;
     }
 
     // --- Render callbacks ---
@@ -172,6 +213,14 @@ class AI_SEO_Settings_Page {
 
     public function render_modules_section() {
         echo '<p>Aktiver eller deaktiver individuelle SEO-moduler.</p>';
+    }
+
+    public function render_social_section() {
+        echo '<p>Innstillinger for sosiale medier.</p>';
+    }
+
+    public function render_org_section() {
+        echo '<p>Legg til organisasjons- eller bedriftsinformasjon for Schema.org-markering på forsiden.</p>';
     }
 
     public function render_provider_field() {
@@ -206,9 +255,8 @@ class AI_SEO_Settings_Page {
     }
 
     public function render_api_key_field() {
-        $options      = get_option( 'ai_seo_options', array() );
-        $has_key      = ! empty( $options['api_key'] );
-        $display_value = $has_key ? '••••••••••••••••' : '';
+        $options  = get_option( 'ai_seo_options', array() );
+        $has_key  = ! empty( $options['api_key'] );
         ?>
         <input type="password"
                name="ai_seo_options[api_key]"
@@ -242,7 +290,7 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_schema]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver Schema.org Article-markering på innlegg
+            Aktiver Schema.org-markering på innlegg
         </label>
         <?php
     }
@@ -255,6 +303,84 @@ class AI_SEO_Settings_Page {
             <input type="checkbox" name="ai_seo_options[enable_opengraph]" value="1" <?php checked( $enabled, 1 ); ?> />
             Aktiver OpenGraph og Twitter Card-metatagger
         </label>
+        <?php
+    }
+
+    public function render_breadcrumbs_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $enabled = isset( $options['enable_breadcrumbs'] ) ? $options['enable_breadcrumbs'] : 1;
+        ?>
+        <label>
+            <input type="checkbox" name="ai_seo_options[enable_breadcrumbs]" value="1" <?php checked( $enabled, 1 ); ?> />
+            Aktiver brødsmuler (shortcode <code>[ai_seo_breadcrumbs]</code> og BreadcrumbList JSON-LD)
+        </label>
+        <?php
+    }
+
+    public function render_redirects_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $enabled = isset( $options['enable_redirects'] ) ? $options['enable_redirects'] : 1;
+        ?>
+        <label>
+            <input type="checkbox" name="ai_seo_options[enable_redirects]" value="1" <?php checked( $enabled, 1 ); ?> />
+            Aktiver omdirigeringsmodul (301/302)
+        </label>
+        <p class="description">Administrer omdirigeringer under <a href="<?php echo esc_url( admin_url( 'tools.php?page=ai-seo-redirects' ) ); ?>">Verktøy > Omdirigeringer</a>.</p>
+        <?php
+    }
+
+    public function render_twitter_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $handle  = isset( $options['twitter_handle'] ) ? $options['twitter_handle'] : '';
+        ?>
+        <input type="text"
+               name="ai_seo_options[twitter_handle]"
+               value="<?php echo esc_attr( $handle ); ?>"
+               class="regular-text"
+               placeholder="@dittbrukernavn" />
+        <p class="description">Brukes i Twitter Card-metatagger (<code>twitter:site</code> og <code>twitter:creator</code>).</p>
+        <?php
+    }
+
+    public function render_org_type_field() {
+        $options  = get_option( 'ai_seo_options', array() );
+        $org_type = isset( $options['schema_org_type'] ) ? $options['schema_org_type'] : '';
+        ?>
+        <select name="ai_seo_options[schema_org_type]">
+            <option value="" <?php selected( $org_type, '' ); ?>>Ingen (deaktivert)</option>
+            <option value="Organization" <?php selected( $org_type, 'Organization' ); ?>>Organisasjon</option>
+            <option value="LocalBusiness" <?php selected( $org_type, 'LocalBusiness' ); ?>>Lokal bedrift</option>
+            <option value="Restaurant" <?php selected( $org_type, 'Restaurant' ); ?>>Restaurant</option>
+            <option value="Store" <?php selected( $org_type, 'Store' ); ?>>Butikk</option>
+            <option value="MedicalBusiness" <?php selected( $org_type, 'MedicalBusiness' ); ?>>Medisinsk virksomhet</option>
+            <option value="LegalService" <?php selected( $org_type, 'LegalService' ); ?>>Juridisk tjeneste</option>
+            <option value="FinancialService" <?php selected( $org_type, 'FinancialService' ); ?>>Finanstjeneste</option>
+        </select>
+        <p class="description">Vises som JSON-LD på forsiden.</p>
+        <?php
+    }
+
+    public function render_org_phone_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $phone   = isset( $options['schema_org_phone'] ) ? $options['schema_org_phone'] : '';
+        ?>
+        <input type="tel" name="ai_seo_options[schema_org_phone]" value="<?php echo esc_attr( $phone ); ?>" class="regular-text" placeholder="+47 12 34 56 78" />
+        <?php
+    }
+
+    public function render_org_email_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $email   = isset( $options['schema_org_email'] ) ? $options['schema_org_email'] : '';
+        ?>
+        <input type="email" name="ai_seo_options[schema_org_email]" value="<?php echo esc_attr( $email ); ?>" class="regular-text" placeholder="post@eksempel.no" />
+        <?php
+    }
+
+    public function render_org_address_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $address = isset( $options['schema_org_address'] ) ? $options['schema_org_address'] : '';
+        ?>
+        <input type="text" name="ai_seo_options[schema_org_address]" value="<?php echo esc_attr( $address ); ?>" class="regular-text" placeholder="Storgata 1, 0001 Oslo" />
         <?php
     }
 

@@ -37,6 +37,28 @@
     font-weight: 600;
 }
 
+/* --- Checkbox Group --- */
+
+.ai-seo-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.ai-seo-checkbox-group label {
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-seo-checkbox-group .description {
+    color: #666;
+    font-size: 12px;
+    font-weight: 400;
+}
+
 /* --- SERP Preview --- */
 
 .ai-seo-serp-preview {
@@ -84,6 +106,66 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* --- SEO Score / Checklist --- */
+
+.ai-seo-seo-score {
+    margin: 20px 0;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.ai-seo-seo-score h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.ai-seo-checklist {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+}
+
+.ai-seo-checklist li {
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-seo-checklist li:last-child {
+    border-bottom: none;
+}
+
+.ai-seo-check-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.ai-seo-check-pass .ai-seo-check-icon {
+    color: #00a32a;
+}
+
+.ai-seo-check-fail .ai-seo-check-icon {
+    color: #d63638;
+}
+
+.ai-seo-check-fail {
+    color: #50575e;
+}
+
+.ai-seo-check-detail {
+    color: #8c8f94;
+    font-size: 12px;
+    margin-left: auto;
 }
 
 /* --- Readability --- */
@@ -140,6 +222,26 @@
 }
 
 .ai-seo-readability-details li {
+    margin-bottom: 4px;
+}
+
+/* --- Suggestions --- */
+
+.ai-seo-suggestions {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff8e5;
+    border: 1px solid #dba617;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.ai-seo-suggestions ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+
+.ai-seo-suggestions li {
     margin-bottom: 4px;
 }
 
@@ -217,6 +319,160 @@
     font-size: 13px;
 }
 
+/* --- Social Image --- */
+
+.ai-seo-social-image {
+    margin-top: 6px;
+}
+
+.ai-seo-social-image .button {
+    margin-right: 8px;
+    margin-top: 8px;
+}
+
+#ai-seo-social-image-preview {
+    margin-bottom: 8px;
+}
+
+#ai-seo-social-image-preview img {
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+}
+
+/* --- Cornerstone Links --- */
+
+.ai-seo-cornerstone-links {
+    margin: 20px 0 0;
+    padding: 16px;
+    background: #fef9e7;
+    border: 1px solid #dba617;
+    border-radius: 4px;
+}
+
+.ai-seo-cornerstone-links h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.ai-seo-cornerstone-links ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ai-seo-cornerstone-links li {
+    padding: 4px 0;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-seo-copy-url {
+    font-size: 11px;
+    color: #8c8f94;
+    transition: background 0.2s;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.ai-seo-copy-url:hover {
+    background: #e0e0e0;
+}
+
+.ai-seo-copy-url.ai-seo-copied {
+    background: #edfaef;
+    color: #00a32a;
+}
+
+/* --- Dashboard Widget --- */
+
+.ai-seo-dashboard {
+    padding: 4px 0;
+}
+
+.ai-seo-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.ai-seo-dash-card {
+    background: #f0f0f1;
+    border-radius: 4px;
+    padding: 12px;
+    text-align: center;
+}
+
+.ai-seo-dash-card.ai-seo-dash-warning .ai-seo-dash-number {
+    color: #d63638;
+}
+
+.ai-seo-dash-number {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1d2327;
+    line-height: 1.2;
+}
+
+.ai-seo-dash-label {
+    display: block;
+    font-size: 11px;
+    color: #50575e;
+    margin-top: 4px;
+}
+
+.ai-seo-dash-list {
+    margin: 8px 0 16px;
+    padding: 0 0 0 20px;
+}
+
+.ai-seo-dash-list li {
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.ai-seo-dash-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+}
+
+.ai-seo-dash-badge-poor {
+    background: #fcf0f1;
+    color: #d63638;
+}
+
+.ai-seo-dash-ok {
+    color: #00a32a;
+    font-size: 13px;
+}
+
+/* --- Redirect Page --- */
+
+.ai-seo-redirect-form {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.ai-seo-delete-link {
+    color: #d63638;
+    text-decoration: none;
+}
+
+.ai-seo-delete-link:hover {
+    color: #8a1114;
+    text-decoration: underline;
+}
+
 /* --- Settings Page --- */
 
 .ai-seo-settings .form-table th {
@@ -231,4 +487,43 @@
 .ai-seo-settings #ai-seo-toggle-key {
     margin-left: 8px;
     vertical-align: baseline;
+}
+
+/* --- Breadcrumbs (frontend shortcode) --- */
+
+.ai-seo-breadcrumbs {
+    margin: 10px 0;
+    font-size: 13px;
+}
+
+.ai-seo-breadcrumb-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.ai-seo-breadcrumb-item {
+    display: inline;
+}
+
+.ai-seo-breadcrumb-item + .ai-seo-breadcrumb-item::before {
+    content: ' / ';
+    color: #8c8f94;
+    margin: 0 6px;
+}
+
+.ai-seo-breadcrumb-item a {
+    text-decoration: none;
+    color: #2271b1;
+}
+
+.ai-seo-breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+.ai-seo-breadcrumb-item span[aria-current] {
+    color: #50575e;
 }

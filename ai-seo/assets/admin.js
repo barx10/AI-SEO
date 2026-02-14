@@ -36,12 +36,15 @@
         }
 
         // --- AI Action Buttons ---
-        var btnGenDesc     = document.getElementById('ai-seo-generate-desc');
+        var btnGenDesc      = document.getElementById('ai-seo-generate-desc');
         var btnSuggestTitle = document.getElementById('ai-seo-suggest-title');
-        var btnAnalyze     = document.getElementById('ai-seo-analyze-keywords');
-        var spinner        = document.getElementById('ai-seo-spinner');
-        var resultBox      = document.getElementById('ai-seo-result');
-        var errorBox       = document.getElementById('ai-seo-error');
+        var btnAnalyze      = document.getElementById('ai-seo-analyze-keywords');
+        var btnSuggestLinks = document.getElementById('ai-seo-suggest-links');
+        var spinner         = document.getElementById('ai-seo-spinner');
+        var resultBox       = document.getElementById('ai-seo-result');
+        var errorBox        = document.getElementById('ai-seo-error');
+
+        var allButtons = [btnGenDesc, btnSuggestTitle, btnAnalyze, btnSuggestLinks];
 
         if (btnGenDesc) {
             btnGenDesc.addEventListener('click', function () {
@@ -73,6 +76,15 @@
             btnAnalyze.addEventListener('click', function () {
                 var postId = this.dataset.postId;
                 doAjax('ai_seo_analyze_keywords', { post_id: postId }, function (data) {
+                    showResult(data.text, true);
+                });
+            });
+        }
+
+        if (btnSuggestLinks) {
+            btnSuggestLinks.addEventListener('click', function () {
+                var postId = this.dataset.postId;
+                doAjax('ai_seo_suggest_links', { post_id: postId }, function (data) {
                     showResult(data.text, true);
                 });
             });
@@ -167,7 +179,7 @@
         }
 
         function disableButtons(disabled) {
-            [btnGenDesc, btnSuggestTitle, btnAnalyze].forEach(function (btn) {
+            allButtons.forEach(function (btn) {
                 if (btn) btn.disabled = disabled;
             });
         }
@@ -185,7 +197,6 @@
                 }
             });
 
-            // Clear placeholder hash when user starts typing a new key.
             apiKeyInput.addEventListener('focus', function () {
                 if (this.value && this.type === 'password') {
                     this.value = '';
@@ -219,7 +230,6 @@
                     }
                 });
 
-                // Select first visible option if current selection is hidden.
                 var currentOption = modelSelect.options[modelSelect.selectedIndex];
                 if (currentOption && currentOption.style.display === 'none' && firstVisible) {
                     firstVisible.selected = true;
@@ -229,5 +239,74 @@
             providerSelect.addEventListener('change', filterModels);
             filterModels();
         }
+
+        // --- Social image upload (WordPress media library) ---
+        var uploadBtn  = document.getElementById('ai-seo-upload-social-image');
+        var removeBtn  = document.getElementById('ai-seo-remove-social-image');
+        var imageInput = document.getElementById('ai_seo_social_image_id');
+        var preview    = document.getElementById('ai-seo-social-image-preview');
+
+        if (uploadBtn && imageInput) {
+            uploadBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                if (typeof wp === 'undefined' || !wp.media) return;
+
+                var frame = wp.media({
+                    title: 'Velg sosialt bilde',
+                    button: { text: 'Bruk dette bildet' },
+                    multiple: false,
+                    library: { type: 'image' }
+                });
+
+                frame.on('select', function () {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    imageInput.value = attachment.id;
+
+                    if (preview) {
+                        var imgUrl = attachment.sizes && attachment.sizes.medium
+                            ? attachment.sizes.medium.url
+                            : attachment.url;
+                        preview.innerHTML = '<img src="' + imgUrl + '" style="max-width:300px;height:auto;" />';
+                        preview.style.display = 'block';
+                    }
+
+                    if (removeBtn) {
+                        removeBtn.style.display = '';
+                    }
+                });
+
+                frame.open();
+            });
+        }
+
+        if (removeBtn && imageInput) {
+            removeBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                imageInput.value = '';
+                if (preview) {
+                    preview.innerHTML = '';
+                    preview.style.display = 'none';
+                }
+                removeBtn.style.display = 'none';
+            });
+        }
+
+        // --- Copy cornerstone URL to clipboard ---
+        var copyLinks = document.querySelectorAll('.ai-seo-copy-url');
+        copyLinks.forEach(function (el) {
+            el.addEventListener('click', function () {
+                var url = this.textContent.trim();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(function () {
+                        el.classList.add('ai-seo-copied');
+                        setTimeout(function () {
+                            el.classList.remove('ai-seo-copied');
+                        }, 1500);
+                    });
+                }
+            });
+            el.style.cursor = 'pointer';
+        });
     });
 })();

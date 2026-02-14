@@ -8,27 +8,24 @@ class AI_SEO_Meta_Handler {
     public function init() {
         add_action( 'wp_head', array( $this, 'output_meta_tags' ), 1 );
         add_action( 'wp_head', array( $this, 'output_canonical' ), 2 );
+        add_action( 'wp_head', array( $this, 'output_robots_meta' ), 2 );
         add_action( 'wp_head', array( $this, 'output_opengraph' ), 3 );
         add_action( 'wp_head', array( $this, 'output_twitter_card' ), 4 );
     }
 
-    /**
-     * Output meta title and description tags.
-     */
     public function output_meta_tags() {
         if ( ! is_singular() ) {
             return;
         }
 
-        $post_id         = get_the_ID();
-        $meta_title      = get_post_meta( $post_id, '_ai_seo_meta_title', true );
+        $post_id          = get_the_ID();
+        $meta_title       = get_post_meta( $post_id, '_ai_seo_meta_title', true );
         $meta_description = get_post_meta( $post_id, '_ai_seo_meta_description', true );
 
         if ( $meta_description ) {
             echo '<meta name="description" content="' . esc_attr( $meta_description ) . '" />' . "\n";
         }
 
-        // Override document title if custom SEO title is set.
         if ( $meta_title ) {
             add_filter( 'pre_get_document_title', function () use ( $meta_title ) {
                 return $meta_title;
@@ -36,15 +33,11 @@ class AI_SEO_Meta_Handler {
         }
     }
 
-    /**
-     * Output canonical URL.
-     */
     public function output_canonical() {
         if ( ! is_singular() ) {
             return;
         }
 
-        // Remove WordPress default canonical to avoid duplicates.
         remove_action( 'wp_head', 'rel_canonical' );
 
         $canonical = wp_get_canonical_url();
@@ -54,8 +47,26 @@ class AI_SEO_Meta_Handler {
     }
 
     /**
-     * Output OpenGraph meta tags.
+     * Output robots meta tag per post.
      */
+    public function output_robots_meta() {
+        if ( ! is_singular() ) {
+            return;
+        }
+
+        $post_id = get_the_ID();
+        $robots  = get_post_meta( $post_id, '_ai_seo_robots_meta', true );
+
+        if ( empty( $robots ) || ! is_array( $robots ) ) {
+            return;
+        }
+
+        $directives = array_map( 'sanitize_text_field', $robots );
+        if ( ! empty( $directives ) ) {
+            echo '<meta name="robots" content="' . esc_attr( implode( ', ', $directives ) ) . '" />' . "\n";
+        }
+    }
+
     public function output_opengraph() {
         $options = get_option( 'ai_seo_options', array() );
         if ( isset( $options['enable_opengraph'] ) && ! $options['enable_opengraph'] ) {
@@ -82,22 +93,43 @@ class AI_SEO_Meta_Handler {
         echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '" />' . "\n";
         echo '<meta property="og:locale" content="' . esc_attr( get_locale() ) . '" />' . "\n";
 
-        if ( has_post_thumbnail( $post_id ) ) {
-            $image = wp_get_attachment_image_url( get_post_thumbnail_id( $post_id ), 'large' );
-            if ( $image ) {
-                echo '<meta property="og:image" content="' . esc_url( $image ) . '" />' . "\n";
+        // Custom social image or featured image.
+        $social_image_id = get_post_meta( $post_id, '_ai_seo_social_image_id', true );
+
+        if ( $social_image_id ) {
+            $social_data = wp_get_attachment_image_src( $social_image_id, 'large' );
+            if ( $social_data ) {
+                echo '<meta property="og:image" content="' . esc_url( $social_data[0] ) . '" />' . "\n";
+                echo '<meta property="og:image:width" content="' . esc_attr( $social_data[1] ) . '" />' . "\n";
+                echo '<meta property="og:image:height" content="' . esc_attr( $social_data[2] ) . '" />' . "\n";
+            }
+        } elseif ( has_post_thumbnail( $post_id ) ) {
+            $thumb_data = wp_get_attachment_image_src( get_post_thumbnail_id( $post_id ), 'large' );
+            if ( $thumb_data ) {
+                echo '<meta property="og:image" content="' . esc_url( $thumb_data[0] ) . '" />' . "\n";
+                echo '<meta property="og:image:width" content="' . esc_attr( $thumb_data[1] ) . '" />' . "\n";
+                echo '<meta property="og:image:height" content="' . esc_attr( $thumb_data[2] ) . '" />' . "\n";
             }
         }
 
         if ( 'article' === $og_type ) {
             echo '<meta property="article:published_time" content="' . esc_attr( get_the_date( 'c', $post_id ) ) . '" />' . "\n";
             echo '<meta property="article:modified_time" content="' . esc_attr( get_the_modified_date( 'c', $post_id ) ) . '" />' . "\n";
+
+            $tags = get_the_tags( $post_id );
+            if ( $tags ) {
+                foreach ( $tags as $tag ) {
+                    echo '<meta property="article:tag" content="' . esc_attr( $tag->name ) . '" />' . "\n";
+                }
+            }
+
+            $categories = get_the_category( $post_id );
+            if ( ! empty( $categories ) ) {
+                echo '<meta property="article:section" content="' . esc_attr( $categories[0]->name ) . '" />' . "\n";
+            }
         }
     }
 
-    /**
-     * Output Twitter Card meta tags.
-     */
     public function output_twitter_card() {
         $options = get_option( 'ai_seo_options', array() );
         if ( isset( $options['enable_opengraph'] ) && ! $options['enable_opengraph'] ) {
@@ -115,14 +147,32 @@ class AI_SEO_Meta_Handler {
         $title = $meta_title ? $meta_title : get_the_title( $post_id );
         $desc  = $meta_description ? $meta_description : wp_trim_words( get_the_excerpt( $post_id ), 30, '...' );
 
-        $card_type = has_post_thumbnail( $post_id ) ? 'summary_large_image' : 'summary';
+        $social_image_id = get_post_meta( $post_id, '_ai_seo_social_image_id', true );
+        $has_image       = false;
+        $image_id        = 0;
+
+        if ( $social_image_id ) {
+            $has_image = true;
+            $image_id  = $social_image_id;
+        } elseif ( has_post_thumbnail( $post_id ) ) {
+            $has_image = true;
+            $image_id  = get_post_thumbnail_id( $post_id );
+        }
+
+        $card_type = $has_image ? 'summary_large_image' : 'summary';
 
         echo '<meta name="twitter:card" content="' . esc_attr( $card_type ) . '" />' . "\n";
         echo '<meta name="twitter:title" content="' . esc_attr( $title ) . '" />' . "\n";
         echo '<meta name="twitter:description" content="' . esc_attr( $desc ) . '" />' . "\n";
 
-        if ( has_post_thumbnail( $post_id ) ) {
-            $image = wp_get_attachment_image_url( get_post_thumbnail_id( $post_id ), 'large' );
+        $twitter_handle = isset( $options['twitter_handle'] ) ? $options['twitter_handle'] : '';
+        if ( ! empty( $twitter_handle ) ) {
+            echo '<meta name="twitter:site" content="' . esc_attr( $twitter_handle ) . '" />' . "\n";
+            echo '<meta name="twitter:creator" content="' . esc_attr( $twitter_handle ) . '" />' . "\n";
+        }
+
+        if ( $has_image && $image_id ) {
+            $image = wp_get_attachment_image_url( $image_id, 'large' );
             if ( $image ) {
                 echo '<meta name="twitter:image" content="' . esc_url( $image ) . '" />' . "\n";
             }

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: AI SEO
  * Plugin URI:  https://example.com/ai-seo
- * Description: AI-drevet SEO-programtillegg for WordPress med støtte for metatagger, sitemap, schema-markering og lesbarhetsanalyse.
- * Version:     1.0.0
+ * Description: AI-drevet SEO-programtillegg for WordPress med støtte for metatagger, sitemap, schema-markering, lesbarhetsanalyse, omdirigeringer og brødsmuler.
+ * Version:     2.0.0
  * Author:      AI SEO
  * License:     GPL-2.0-or-later
  * Text Domain: ai-seo
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AI_SEO_VERSION', '1.0.0' );
+define( 'AI_SEO_VERSION', '2.0.0' );
 define( 'AI_SEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -25,8 +25,13 @@ require_once AI_SEO_PLUGIN_DIR . 'includes/class-meta-handler.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-sitemap.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-schema.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-readability.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-seo-score.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-redirects.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-breadcrumbs.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-dashboard-widget.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/settings-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
+require_once AI_SEO_PLUGIN_DIR . 'admin/redirects-page.php';
 
 /**
  * Initialize plugin components.
@@ -34,7 +39,7 @@ require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
 function ai_seo_init() {
     $options = get_option( 'ai_seo_options', array() );
 
-    // Always initialize meta handler (titles, descriptions, OG, canonical).
+    // Always initialize meta handler.
     $meta_handler = new AI_SEO_Meta_Handler();
     $meta_handler->init();
 
@@ -50,6 +55,18 @@ function ai_seo_init() {
         $schema->init();
     }
 
+    // Breadcrumbs module.
+    if ( ! isset( $options['enable_breadcrumbs'] ) || $options['enable_breadcrumbs'] ) {
+        $breadcrumbs = new AI_SEO_Breadcrumbs();
+        $breadcrumbs->init();
+    }
+
+    // Redirects module.
+    if ( ! isset( $options['enable_redirects'] ) || $options['enable_redirects'] ) {
+        $redirects = new AI_SEO_Redirects();
+        $redirects->init();
+    }
+
     // Settings page.
     $settings = new AI_SEO_Settings_Page();
     $settings->init();
@@ -57,6 +74,14 @@ function ai_seo_init() {
     // Meta box.
     $meta_box = new AI_SEO_Meta_Box();
     $meta_box->init();
+
+    // Redirects admin page.
+    $redirects_page = new AI_SEO_Redirects_Page();
+    $redirects_page->init();
+
+    // Dashboard widget.
+    $dashboard = new AI_SEO_Dashboard_Widget();
+    $dashboard->init();
 }
 add_action( 'plugins_loaded', 'ai_seo_init' );
 
@@ -66,10 +91,11 @@ add_action( 'plugins_loaded', 'ai_seo_init' );
 function ai_seo_enqueue_admin_assets( $hook ) {
     $screen = get_current_screen();
 
-    $is_editor  = in_array( $hook, array( 'post.php', 'post-new.php' ), true );
-    $is_settings = ( $screen && $screen->id === 'settings_page_ai-seo' );
+    $is_editor    = in_array( $hook, array( 'post.php', 'post-new.php' ), true );
+    $is_settings  = ( $screen && $screen->id === 'settings_page_ai-seo' );
+    $is_dashboard = ( $screen && $screen->id === 'dashboard' );
 
-    if ( ! $is_editor && ! $is_settings ) {
+    if ( ! $is_editor && ! $is_settings && ! $is_dashboard ) {
         return;
     }
 
@@ -88,6 +114,11 @@ function ai_seo_enqueue_admin_assets( $hook ) {
         true
     );
 
+    // Enqueue media library for social image upload.
+    if ( $is_editor ) {
+        wp_enqueue_media();
+    }
+
     wp_localize_script( 'ai-seo-admin', 'aiSeo', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce'   => wp_create_nonce( 'ai_seo_nonce' ),
@@ -103,6 +134,10 @@ function ai_seo_ajax_generate_description() {
 
     if ( ! current_user_can( 'edit_posts' ) ) {
         wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
     }
 
     $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
@@ -139,6 +174,10 @@ function ai_seo_ajax_suggest_title() {
 
     if ( ! current_user_can( 'edit_posts' ) ) {
         wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
     }
 
     $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
@@ -183,6 +222,10 @@ function ai_seo_ajax_analyze_keywords() {
         wp_send_json_error( 'Ingen tilgang.' );
     }
 
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
+    }
+
     $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
     if ( ! $post_id ) {
@@ -211,11 +254,70 @@ function ai_seo_ajax_analyze_keywords() {
 add_action( 'wp_ajax_ai_seo_analyze_keywords', 'ai_seo_ajax_analyze_keywords' );
 
 /**
- * Flush rewrite rules on activation (for sitemap).
+ * AJAX handler: Suggest internal links.
+ */
+function ai_seo_ajax_suggest_links() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
+    }
+
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Innlegget ble ikke funnet.' );
+    }
+
+    $content = wp_strip_all_tags( $post->post_content );
+    $content = mb_substr( $content, 0, 2000 );
+
+    // Get other published posts to suggest links to.
+    $other_posts = get_posts( array(
+        'post_type'      => array( 'post', 'page' ),
+        'post_status'    => 'publish',
+        'posts_per_page' => 30,
+        'exclude'        => array( $post_id ),
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    ) );
+
+    $titles_list = '';
+    foreach ( $other_posts as $op ) {
+        $titles_list .= '- ' . $op->post_title . ' (' . get_permalink( $op->ID ) . ")\n";
+    }
+
+    $prompt = "Du er en SEO-ekspert. Basert på innholdet nedenfor, foreslå hvilke av de eksisterende sidene på nettstedet det er mest relevant å lenke til internt. Forklar kort hvorfor og foreslå hvilken ankertekst som bør brukes. Svar på norsk.\n\nInnhold:\n" . $content . "\n\nEksisterende sider:\n" . $titles_list;
+
+    $client = new AI_SEO_Client();
+    $result = $client->send_request( $prompt );
+
+    if ( is_wp_error( $result ) ) {
+        wp_send_json_error( $result->get_error_message() );
+    }
+
+    wp_send_json_success( array( 'text' => wp_kses_post( $result ) ) );
+}
+add_action( 'wp_ajax_ai_seo_suggest_links', 'ai_seo_ajax_suggest_links' );
+
+/**
+ * Flush rewrite rules and create DB tables on activation.
  */
 function ai_seo_activate() {
     $sitemap = new AI_SEO_Sitemap();
     $sitemap->init();
+
+    AI_SEO_Redirects::create_table();
+
     flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'ai_seo_activate' );
