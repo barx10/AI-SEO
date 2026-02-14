@@ -40,6 +40,10 @@ class AI_SEO_Client {
             return $this->request_openai( $prompt );
         }
 
+        if ( 'google' === $this->provider ) {
+            return $this->request_gemini( $prompt );
+        }
+
         return new WP_Error( 'ai_seo_invalid_provider', 'Ugyldig AI-leverandør konfigurert.' );
     }
 
@@ -132,5 +136,53 @@ class AI_SEO_Client {
         }
 
         return new WP_Error( 'ai_seo_parse_error', 'Kunne ikke lese svaret fra OpenAI API.' );
+    }
+
+    /**
+     * Send request to the Google Gemini API.
+     */
+    private function request_gemini( $prompt ) {
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . $this->model . ':generateContent?key=' . $this->api_key;
+
+        $body = wp_json_encode( array(
+            'contents' => array(
+                array(
+                    'parts' => array(
+                        array(
+                            'text' => $prompt,
+                        ),
+                    ),
+                ),
+            ),
+            'generationConfig' => array(
+                'maxOutputTokens' => 1024,
+            ),
+        ) );
+
+        $response = wp_remote_post( $url, array(
+            'timeout' => 60,
+            'headers' => array(
+                'Content-Type' => 'application/json',
+            ),
+            'body' => $body,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'ai_seo_request_failed', 'Forespørselen feilet: ' . $response->get_error_message() );
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $status !== 200 ) {
+            $error_msg = isset( $data['error']['message'] ) ? $data['error']['message'] : 'Ukjent feil fra Gemini API.';
+            return new WP_Error( 'ai_seo_api_error', 'Gemini API-feil (' . $status . '): ' . $error_msg );
+        }
+
+        if ( isset( $data['candidates'][0]['content']['parts'][0]['text'] ) ) {
+            return trim( $data['candidates'][0]['content']['parts'][0]['text'] );
+        }
+
+        return new WP_Error( 'ai_seo_parse_error', 'Kunne ikke lese svaret fra Gemini API.' );
     }
 }

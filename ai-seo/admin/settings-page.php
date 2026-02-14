@@ -93,13 +93,14 @@ class AI_SEO_Settings_Page {
     public function sanitize_options( $input ) {
         $sanitized = array();
 
-        $sanitized['ai_provider'] = isset( $input['ai_provider'] ) && in_array( $input['ai_provider'], array( 'anthropic', 'openai' ), true )
+        $sanitized['ai_provider'] = isset( $input['ai_provider'] ) && in_array( $input['ai_provider'], array( 'anthropic', 'openai', 'google' ), true )
             ? $input['ai_provider']
             : 'anthropic';
 
         $allowed_models = array(
             'claude-sonnet-4-5-20250929',
             'gpt-4o',
+            'gemini-3-flash-preview',
         );
         $sanitized['ai_model'] = isset( $input['ai_model'] ) && in_array( $input['ai_model'], $allowed_models, true )
             ? $input['ai_model']
@@ -180,6 +181,7 @@ class AI_SEO_Settings_Page {
         <select name="ai_seo_options[ai_provider]" id="ai_seo_provider">
             <option value="anthropic" <?php selected( $provider, 'anthropic' ); ?>>Claude (Anthropic)</option>
             <option value="openai" <?php selected( $provider, 'openai' ); ?>>OpenAI</option>
+            <option value="google" <?php selected( $provider, 'google' ); ?>>Google (Gemini)</option>
         </select>
         <?php
     }
@@ -194,6 +196,9 @@ class AI_SEO_Settings_Page {
             </optgroup>
             <optgroup label="OpenAI" class="ai-seo-model-group" data-provider="openai">
                 <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>GPT-4o</option>
+            </optgroup>
+            <optgroup label="Google" class="ai-seo-model-group" data-provider="google">
+                <option value="gemini-3-flash-preview" <?php selected( $model, 'gemini-3-flash-preview' ); ?>>Gemini 3 Flash Preview</option>
             </optgroup>
         </select>
         <p class="description">Velg modellen som skal brukes for AI-generering.</p>
