@@ -181,6 +181,10 @@ class AI_SEO_Readability {
 
     /**
      * Calculate Flesch Reading Ease adapted for Norwegian.
+     *
+     * The syllable coefficient is reduced from 84.6 (English) to 66.0
+     * because Norwegian naturally has more syllables per word due to
+     * compound words and inflectional morphology.
      */
     private function flesch_kincaid_score( $words, $sentences, $syllables ) {
         if ( $sentences === 0 || $words === 0 ) {
@@ -188,7 +192,7 @@ class AI_SEO_Readability {
         }
         $score = 206.835
             - ( 1.015 * ( $words / $sentences ) )
-            - ( 84.6 * ( $syllables / $words ) );
+            - ( 66.0 * ( $syllables / $words ) );
 
         return (int) round( max( 0, min( 100, $score ) ) );
     }
