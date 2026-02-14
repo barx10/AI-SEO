@@ -142,7 +142,7 @@ class AI_SEO_Client {
      * Send request to the Google Gemini API.
      */
     private function request_gemini( $prompt ) {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . $this->model . ':generateContent?key=' . $this->api_key;
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode( $this->model ) . ':generateContent?key=' . urlencode( $this->api_key );
 
         $body = wp_json_encode( array(
             'contents' => array(
