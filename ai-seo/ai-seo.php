@@ -377,6 +377,12 @@ function ai_seo_ajax_refresh_score() {
         wp_send_json_error( 'Innlegget ble ikke funnet.' );
     }
 
+    // Use current editor content instead of saved post_content so unsaved changes are analyzed.
+    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    if ( ! empty( $editor_content ) ) {
+        $post->post_content = $editor_content;
+    }
+
     // SEO score with current (unsaved) field values.
     $seo_score = AI_SEO_Score::analyze( $post, $focus_keyword, $meta_title, $meta_description );
 
