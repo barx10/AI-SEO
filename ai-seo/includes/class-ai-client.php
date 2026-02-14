@@ -155,7 +155,25 @@ class AI_SEO_Client {
                 ),
             ),
             'generationConfig' => array(
-                'maxOutputTokens' => 1024,
+                'maxOutputTokens' => 2048,
+            ),
+            'safetySettings' => array(
+                array(
+                    'category'  => 'HARM_CATEGORY_HARASSMENT',
+                    'threshold' => 'BLOCK_ONLY_HIGH',
+                ),
+                array(
+                    'category'  => 'HARM_CATEGORY_HATE_SPEECH',
+                    'threshold' => 'BLOCK_ONLY_HIGH',
+                ),
+                array(
+                    'category'  => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                    'threshold' => 'BLOCK_ONLY_HIGH',
+                ),
+                array(
+                    'category'  => 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    'threshold' => 'BLOCK_ONLY_HIGH',
+                ),
             ),
         ) );
 
@@ -179,8 +197,23 @@ class AI_SEO_Client {
             return new WP_Error( 'ai_seo_api_error', 'Gemini API-feil (' . $status . '): ' . $error_msg );
         }
 
+        // Check for prompt feedback (content filters on input).
+        if ( isset( $data['promptFeedback']['blockReason'] ) ) {
+            $block_reason = $data['promptFeedback']['blockReason'];
+            return new WP_Error( 'ai_seo_blocked', 'Gemini blokkerte forespørselen: ' . $block_reason );
+        }
+
         if ( isset( $data['candidates'][0]['content']['parts'][0]['text'] ) ) {
-            return trim( $data['candidates'][0]['content']['parts'][0]['text'] );
+            $text = trim( $data['candidates'][0]['content']['parts'][0]['text'] );
+
+            // Check finish reason.
+            $finish_reason = isset( $data['candidates'][0]['finishReason'] ) ? $data['candidates'][0]['finishReason'] : 'UNKNOWN';
+            if ( 'STOP' !== $finish_reason && 'UNKNOWN' !== $finish_reason ) {
+                // Append warning if stopped for non-natural reason.
+                $text .= "\n\n[Advarsel: Svaret ble kuttet av. Årsak: {$finish_reason}]";
+            }
+
+            return $text;
         }
 
         return new WP_Error( 'ai_seo_parse_error', 'Kunne ikke lese svaret fra Gemini API.' );
