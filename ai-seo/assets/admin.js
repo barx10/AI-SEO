@@ -324,6 +324,26 @@
             var currentDesc  = document.getElementById('ai_seo_meta_description');
             var currentKw    = document.getElementById('ai_seo_focus_keyword');
 
+            // Get current editor content (supports both Gutenberg and Classic editor).
+            var editorContent = '';
+            try {
+                if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
+                    editorContent = wp.data.select('core/editor').getEditedPostContent() || '';
+                }
+            } catch (e) {
+                // Gutenberg not available, try Classic Editor.
+            }
+            if (!editorContent) {
+                if (typeof tinymce !== 'undefined' && tinymce.activeEditor && !tinymce.activeEditor.isHidden()) {
+                    editorContent = tinymce.activeEditor.getContent();
+                } else {
+                    var contentArea = document.getElementById('content');
+                    if (contentArea) {
+                        editorContent = contentArea.value;
+                    }
+                }
+            }
+
             var formData = new FormData();
             formData.append('action', 'ai_seo_refresh_score');
             formData.append('nonce', aiSeo.nonce);
@@ -331,6 +351,7 @@
             formData.append('seo_title', currentTitle ? currentTitle.value : '');
             formData.append('seo_description', currentDesc ? currentDesc.value : '');
             formData.append('seo_keyword', currentKw ? currentKw.value : '');
+            formData.append('post_content', editorContent);
 
             btnRefreshScore.disabled = true;
             btnRefreshScore.textContent = 'Oppdaterer…';
