@@ -65,10 +65,12 @@ class AI_SEO_Score {
         // Keyword-dependent checks.
         if ( $has_keyword ) {
             // 5. Keyword in title.
+            $title_normalized   = self::normalize_for_comparison( $title );
+            $keyword_normalized = self::normalize_for_comparison( $keyword );
             $checks[] = array(
                 'id'     => 'keyword_in_title',
                 'label'  => 'Fokus-søkeord finnes i tittelen',
-                'pass'   => mb_stripos( $title, $keyword_lower ) !== false || mb_stripos( $title, $keyword ) !== false,
+                'pass'   => mb_stripos( $title, $keyword ) !== false || mb_stripos( $title_normalized, $keyword_normalized ) !== false,
                 'detail' => '',
                 'weight' => 10,
             );
@@ -77,7 +79,7 @@ class AI_SEO_Score {
             $checks[] = array(
                 'id'     => 'keyword_in_desc',
                 'label'  => 'Fokus-søkeord finnes i metabeskrivelsen',
-                'pass'   => ! empty( $description ) && ( mb_stripos( $description, $keyword ) !== false ),
+                'pass'   => ! empty( $description ) && ( mb_stripos( $description, $keyword ) !== false || mb_stripos( self::normalize_for_comparison( $description ), $keyword_normalized ) !== false ),
                 'detail' => '',
                 'weight' => 10,
             );
@@ -87,7 +89,7 @@ class AI_SEO_Score {
             $checks[] = array(
                 'id'     => 'keyword_in_intro',
                 'label'  => 'Fokus-søkeord finnes i første avsnitt',
-                'pass'   => mb_stripos( $first_para, $keyword ) !== false,
+                'pass'   => mb_stripos( $first_para, $keyword ) !== false || mb_stripos( self::normalize_for_comparison( $first_para ), $keyword_normalized ) !== false,
                 'detail' => '',
                 'weight' => 10,
             );
@@ -96,7 +98,7 @@ class AI_SEO_Score {
             $headings = self::extract_headings( $content );
             $keyword_in_heading = false;
             foreach ( $headings as $h ) {
-                if ( mb_stripos( $h, $keyword ) !== false ) {
+                if ( mb_stripos( $h, $keyword ) !== false || mb_stripos( self::normalize_for_comparison( $h ), $keyword_normalized ) !== false ) {
                     $keyword_in_heading = true;
                     break;
                 }
@@ -261,6 +263,14 @@ class AI_SEO_Score {
             }
         }
         return $count;
+    }
+
+    private static function normalize_for_comparison( $text ) {
+        // Replace hyphens, en-dashes and em-dashes with spaces for flexible matching.
+        $text = str_replace( array( '-', "\xE2\x80\x93", "\xE2\x80\x94" ), ' ', $text );
+        // Collapse multiple spaces.
+        $text = preg_replace( '/\s+/', ' ', trim( $text ) );
+        return $text;
     }
 
     private static function count_external_links( $html ) {

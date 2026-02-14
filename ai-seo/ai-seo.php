@@ -196,6 +196,7 @@ function ai_seo_ajax_suggest_title() {
     $content = mb_substr( $content, 0, 3000 );
 
     $prompt = "Du er en SEO-ekspert. Foreslå 3 SEO-optimaliserte titler for følgende innhold.";
+    $prompt .= " Hver tittel SKAL være mellom 30 og 60 tegn lang. IKKE bruk kolon (:) i titlene.";
     if ( $keyword ) {
         $prompt .= " Søkeordet som skal inkluderes er: «{$keyword}».";
     }
