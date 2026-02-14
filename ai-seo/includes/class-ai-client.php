@@ -55,7 +55,7 @@ class AI_SEO_Client {
 
         $body = wp_json_encode( array(
             'model'      => $this->model,
-            'max_tokens' => 1024,
+            'max_tokens' => 4096,
             'messages'   => array(
                 array(
                     'role'    => 'user',
@@ -101,7 +101,7 @@ class AI_SEO_Client {
 
         $body = wp_json_encode( array(
             'model'      => $this->model,
-            'max_tokens' => 1024,
+            'max_tokens' => 4096,
             'messages'   => array(
                 array(
                     'role'    => 'user',
@@ -155,7 +155,7 @@ class AI_SEO_Client {
                 ),
             ),
             'generationConfig' => array(
-                'maxOutputTokens' => 2048,
+                'maxOutputTokens' => 4096,
             ),
             'safetySettings' => array(
                 array(
