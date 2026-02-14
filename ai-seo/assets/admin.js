@@ -302,16 +302,19 @@
         function refreshSeoScore() {
             if (!btnRefreshScore || !checklist) return;
 
-            var postId  = btnRefreshScore.dataset.postId;
-            var keyword = document.getElementById('ai_seo_focus_keyword');
+            var postId       = btnRefreshScore.dataset.postId;
+            // Re-query elements fresh to avoid stale references.
+            var currentTitle = document.getElementById('ai_seo_meta_title');
+            var currentDesc  = document.getElementById('ai_seo_meta_description');
+            var currentKw    = document.getElementById('ai_seo_focus_keyword');
 
             var formData = new FormData();
             formData.append('action', 'ai_seo_refresh_score');
             formData.append('nonce', aiSeo.nonce);
             formData.append('post_id', postId);
-            formData.append('meta_title', titleInput ? titleInput.value : '');
-            formData.append('meta_description', descInput ? descInput.value : '');
-            formData.append('focus_keyword', keyword ? keyword.value : '');
+            formData.append('seo_title', currentTitle ? currentTitle.value : '');
+            formData.append('seo_description', currentDesc ? currentDesc.value : '');
+            formData.append('seo_keyword', currentKw ? currentKw.value : '');
 
             btnRefreshScore.disabled = true;
             btnRefreshScore.textContent = 'Oppdaterer…';

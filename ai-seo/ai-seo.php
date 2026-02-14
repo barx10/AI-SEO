@@ -320,9 +320,9 @@ function ai_seo_ajax_refresh_score() {
     }
 
     $post_id          = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
-    $meta_title       = isset( $_POST['meta_title'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_title'] ) ) : '';
-    $meta_description = isset( $_POST['meta_description'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_description'] ) ) : '';
-    $focus_keyword    = isset( $_POST['focus_keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['focus_keyword'] ) ) : '';
+    $meta_title       = isset( $_POST['seo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_title'] ) ) : '';
+    $meta_description = isset( $_POST['seo_description'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_description'] ) ) : '';
+    $focus_keyword    = isset( $_POST['seo_keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_keyword'] ) ) : '';
 
     if ( ! $post_id ) {
         wp_send_json_error( 'Ugyldig innleggs-ID.' );
