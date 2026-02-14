@@ -1,3 +1,5 @@
+**[English](README.en.md)** | Norsk
+
 # AI SEO – WordPress-programtillegg
 
 AI SEO er et WordPress-programtillegg som kombinerer tradisjonelle SEO-verktøy med AI-drevet innholdsoptimalisering. Pluginet støtter Anthropic (Claude), OpenAI (GPT-4o) og Google (Gemini) som AI-leverandører.
