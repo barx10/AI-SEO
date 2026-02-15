@@ -34,6 +34,7 @@ require_once AI_SEO_PLUGIN_DIR . 'admin/settings-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/redirects-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/migration-page.php';
+require_once AI_SEO_PLUGIN_DIR . 'admin/bulk-columns.php';
 
 /**
  * Initialize plugin components.
@@ -88,6 +89,10 @@ function ai_seo_init() {
     // Migration page.
     $migration_page = new AI_SEO_Migration_Page();
     $migration_page->init();
+
+    // Bulk columns in post list views.
+    $bulk_columns = new AI_SEO_Bulk_Columns();
+    $bulk_columns->init();
 }
 add_action( 'plugins_loaded', 'ai_seo_init' );
 
@@ -97,12 +102,14 @@ add_action( 'plugins_loaded', 'ai_seo_init' );
 function ai_seo_enqueue_admin_assets( $hook ) {
     $screen = get_current_screen();
 
-    $is_editor    = in_array( $hook, array( 'post.php', 'post-new.php' ), true );
-    $is_settings  = ( $screen && $screen->id === 'settings_page_ai-seo' );
-    $is_dashboard = ( $screen && $screen->id === 'dashboard' );
-    $is_migration = ( $screen && $screen->id === 'tools_page_ai-seo-migration' );
+    $is_editor     = in_array( $hook, array( 'post.php', 'post-new.php' ), true );
+    $is_settings   = ( $screen && $screen->id === 'settings_page_ai-seo' );
+    $is_dashboard  = ( $screen && $screen->id === 'dashboard' );
+    $is_migration  = ( $screen && $screen->id === 'tools_page_ai-seo-migration' );
+    $is_list       = ( $hook === 'edit.php' );
+    $is_redirects  = ( $screen && $screen->id === 'tools_page_ai-seo-redirects' );
 
-    if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration ) {
+    if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration && ! $is_list && ! $is_redirects ) {
         return;
     }
 

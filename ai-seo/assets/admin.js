@@ -546,6 +546,70 @@
             });
         });
 
+        // --- Inline editing in post list ---
+        var inlineEdits = document.querySelectorAll('.ai-seo-inline-edit');
+        inlineEdits.forEach(function (wrapper) {
+            var valueSpan = wrapper.querySelector('.ai-seo-inline-value');
+            var inputEl   = wrapper.querySelector('.ai-seo-inline-input');
+            if (!valueSpan || !inputEl) return;
+
+            // Click to start editing.
+            valueSpan.addEventListener('click', function () {
+                valueSpan.style.display = 'none';
+                inputEl.style.display = '';
+                inputEl.focus();
+                inputEl.select();
+            });
+
+            // Save on blur or Enter key.
+            function saveInline() {
+                var postId = wrapper.dataset.postId;
+                var field  = wrapper.dataset.field;
+                var value  = inputEl.value;
+
+                inputEl.style.display = 'none';
+                valueSpan.style.display = '';
+
+                if (value) {
+                    var maxLen = parseInt(wrapper.dataset.max, 10) || 160;
+                    var display = value.length > 60 ? value.substring(0, 60) + '...' : value;
+                    valueSpan.textContent = display;
+                    valueSpan.classList.remove('ai-seo-inline-empty');
+                } else {
+                    valueSpan.textContent = '\u2014';
+                    valueSpan.classList.add('ai-seo-inline-empty');
+                }
+
+                wrapper.classList.add('ai-seo-inline-saving');
+
+                var formData = new FormData();
+                formData.append('action', 'ai_seo_inline_save_meta');
+                formData.append('nonce', aiSeo.nonce);
+                formData.append('post_id', postId);
+                formData.append('field', field);
+                formData.append('value', value);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', aiSeo.ajaxUrl, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState !== 4) return;
+                    wrapper.classList.remove('ai-seo-inline-saving');
+                };
+                xhr.send(formData);
+            }
+
+            inputEl.addEventListener('blur', saveInline);
+            inputEl.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    inputEl.blur();
+                } else if (e.key === 'Escape') {
+                    inputEl.style.display = 'none';
+                    valueSpan.style.display = '';
+                }
+            });
+        });
+
         // --- Copy cornerstone URL to clipboard ---
         var copyLinks = document.querySelectorAll('.ai-seo-copy-url');
         copyLinks.forEach(function (el) {

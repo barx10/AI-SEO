@@ -114,6 +114,36 @@ class AI_SEO_Redirects_Page {
                 </form>
             </div>
 
+            <?php
+            // Detect redirect chains and loops.
+            $chain_issues = AI_SEO_Redirects::detect_chains();
+            if ( ! empty( $chain_issues ) ) :
+                $loops  = array_filter( $chain_issues, function( $i ) { return $i['type'] === 'loop'; } );
+                $chains = array_filter( $chain_issues, function( $i ) { return $i['type'] === 'chain'; } );
+            ?>
+                <div class="ai-seo-chain-warnings">
+                    <h2>Advarsler</h2>
+                    <?php if ( ! empty( $loops ) ) : ?>
+                        <?php foreach ( $loops as $issue ) : ?>
+                            <div class="ai-seo-chain-warning ai-seo-chain-loop">
+                                <strong>Omdirigeringsloop oppdaget:</strong>
+                                <code><?php echo esc_html( implode( ' &rarr; ', $issue['path'] ) ); ?></code>
+                                <br><span class="description">Denne loopen vil aldri nå et endelig mål. Fjern eller rett opp en av omdirigeringene.</span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php if ( ! empty( $chains ) ) : ?>
+                        <?php foreach ( $chains as $issue ) : ?>
+                            <div class="ai-seo-chain-warning ai-seo-chain-chain">
+                                <strong>Omdirigeringskjede (<?php echo count( $issue['path'] ); ?> hopp):</strong>
+                                <code><?php echo esc_html( implode( ' &rarr; ', $issue['path'] ) ); ?></code>
+                                <br><span class="description">Flere hopp forsinker brukeren og reduserer lenke-juice. Vurder å peke den første omdirigeringen direkte til det endelige målet.</span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
             <h2>Eksisterende omdirigeringer (<?php echo esc_html( $total ); ?>)</h2>
 
             <?php if ( empty( $redirects ) ) : ?>

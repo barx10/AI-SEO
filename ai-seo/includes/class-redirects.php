@@ -120,4 +120,85 @@ class AI_SEO_Redirects {
         $table = $wpdb->prefix . self::TABLE_NAME;
         return $wpdb->delete( $table, array( 'id' => absint( $id ) ), array( '%d' ) );
     }
+
+    /**
+     * Detect redirect chains and loops.
+     *
+     * Returns an array of issues, each with:
+     *   'type'  => 'chain' | 'loop'
+     *   'path'  => array of source URLs forming the chain/loop
+     *   'ids'   => array of redirect IDs involved
+     */
+    public static function detect_chains() {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE_NAME;
+
+        $redirects = $wpdb->get_results( "SELECT * FROM $table ORDER BY id ASC" );
+        if ( empty( $redirects ) ) {
+            return array();
+        }
+
+        // Build lookup: source_url => redirect row.
+        $by_source = array();
+        foreach ( $redirects as $r ) {
+            $by_source[ $r->source_url ] = $r;
+        }
+
+        // Also index by target path for matching targets that are relative paths.
+        $issues  = array();
+        $checked = array();
+
+        foreach ( $redirects as $r ) {
+            if ( isset( $checked[ $r->source_url ] ) ) {
+                continue;
+            }
+
+            $chain   = array();
+            $ids     = array();
+            $visited = array();
+            $current = $r;
+
+            while ( $current ) {
+                if ( isset( $visited[ $current->source_url ] ) ) {
+                    // Loop detected.
+                    $chain[] = $current->source_url;
+                    $ids[]   = $current->id;
+                    $issues[] = array(
+                        'type' => 'loop',
+                        'path' => $chain,
+                        'ids'  => $ids,
+                    );
+                    break;
+                }
+
+                $visited[ $current->source_url ] = true;
+                $checked[ $current->source_url ]  = true;
+                $chain[] = $current->source_url;
+                $ids[]   = $current->id;
+
+                // Normalize target to a path for comparison.
+                $target_path = wp_parse_url( $current->target_url, PHP_URL_PATH );
+                if ( $target_path ) {
+                    $target_path = '/' . ltrim( $target_path, '/' );
+                }
+
+                if ( $target_path && isset( $by_source[ $target_path ] ) ) {
+                    $current = $by_source[ $target_path ];
+                } else {
+                    $current = null;
+                }
+
+                // If chain has more than 1 hop and we ended (no loop), it's a chain.
+                if ( ! $current && count( $chain ) > 1 ) {
+                    $issues[] = array(
+                        'type' => 'chain',
+                        'path' => $chain,
+                        'ids'  => $ids,
+                    );
+                }
+            }
+        }
+
+        return $issues;
+    }
 }
