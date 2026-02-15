@@ -10,9 +10,10 @@ class AI_SEO_Migration_Page {
     }
 
     public function add_menu_page() {
-        add_management_page(
+        add_submenu_page(
+            'ai-seo',
             'SEO-migrering',
-            'SEO-migrering',
+            'Migrering',
             'manage_options',
             'ai-seo-migration',
             array( $this, 'render_page' )
