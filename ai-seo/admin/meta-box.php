@@ -237,23 +237,19 @@ class AI_SEO_Meta_Box {
             <!-- AI Actions -->
             <div class="ai-seo-ai-actions">
                 <h4>AI-verktøy</h4>
-                <ol class="ai-seo-workflow-guide">
-                    <li>Skriv innholdet med overskrifter (H2) og søkeord i teksten</li>
-                    <li>Sett fokussøkeord — eller bruk <strong>Foreslå fokusord</strong></li>
-                    <li>Bruk <strong>Foreslå tittel</strong> for SEO-tittel (30–60 tegn)</li>
-                    <li>Bruk <strong>Generer metabeskrivelse</strong> (120–160 tegn)</li>
-                    <li>Klikk <strong>Oppdater analyse</strong> for å sjekke alt samlet</li>
-                </ol>
+                <p class="ai-seo-workflow-hint">Skriv innholdet ferdig først, så bruk knappene under til å fylle ut SEO-feltene automatisk.</p>
                 <div class="ai-seo-button-group">
-                    <button type="button" class="button button-secondary" id="ai-seo-generate-desc" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Generer metabeskrivelse
+                    <button type="button" class="button button-secondary" id="ai-seo-suggest-keyword" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
+                        Foreslå fokusord
                     </button>
                     <button type="button" class="button button-secondary" id="ai-seo-suggest-title" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
                         Foreslå tittel
                     </button>
-                    <button type="button" class="button button-secondary" id="ai-seo-suggest-keyword" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Foreslå fokusord
+                    <button type="button" class="button button-secondary" id="ai-seo-generate-desc" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
+                        Generer metabeskrivelse
                     </button>
+                </div>
+                <div class="ai-seo-button-group ai-seo-button-group-secondary">
                     <button type="button" class="button button-secondary" id="ai-seo-analyze-keywords" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
                         Analyser søkeord
                     </button>
