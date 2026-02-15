@@ -29,9 +29,11 @@ require_once AI_SEO_PLUGIN_DIR . 'includes/class-seo-score.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-redirects.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-breadcrumbs.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-dashboard-widget.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-migration.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/settings-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/redirects-page.php';
+require_once AI_SEO_PLUGIN_DIR . 'admin/migration-page.php';
 
 /**
  * Initialize plugin components.
@@ -82,6 +84,10 @@ function ai_seo_init() {
     // Dashboard widget.
     $dashboard = new AI_SEO_Dashboard_Widget();
     $dashboard->init();
+
+    // Migration page.
+    $migration_page = new AI_SEO_Migration_Page();
+    $migration_page->init();
 }
 add_action( 'plugins_loaded', 'ai_seo_init' );
 
@@ -94,8 +100,9 @@ function ai_seo_enqueue_admin_assets( $hook ) {
     $is_editor    = in_array( $hook, array( 'post.php', 'post-new.php' ), true );
     $is_settings  = ( $screen && $screen->id === 'settings_page_ai-seo' );
     $is_dashboard = ( $screen && $screen->id === 'dashboard' );
+    $is_migration = ( $screen && $screen->id === 'tools_page_ai-seo-migration' );
 
-    if ( ! $is_editor && ! $is_settings && ! $is_dashboard ) {
+    if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration ) {
         return;
     }
 
@@ -422,6 +429,33 @@ function ai_seo_ajax_readability_highlight() {
     wp_send_json_success( array( 'html' => $highlighted ) );
 }
 add_action( 'wp_ajax_ai_seo_readability_highlight', 'ai_seo_ajax_readability_highlight' );
+
+/**
+ * AJAX handler: Run SEO migration.
+ */
+function ai_seo_ajax_run_migration() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    $source    = isset( $_POST['source'] ) ? sanitize_text_field( wp_unslash( $_POST['source'] ) ) : '';
+    $overwrite = ! empty( $_POST['overwrite'] );
+
+    if ( ! in_array( $source, array( 'yoast', 'rankmath' ), true ) ) {
+        wp_send_json_error( 'Ugyldig kilde.' );
+    }
+
+    $result = AI_SEO_Migration::run( $source, $overwrite );
+
+    if ( isset( $result['error'] ) ) {
+        wp_send_json_error( $result['error'] );
+    }
+
+    wp_send_json_success( $result );
+}
+add_action( 'wp_ajax_ai_seo_run_migration', 'ai_seo_ajax_run_migration' );
 
 /**
  * Flush rewrite rules and create DB tables on activation.

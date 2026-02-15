@@ -477,6 +477,75 @@
             });
         }
 
+        // --- Migration buttons ---
+        var migrateBtns = document.querySelectorAll('.ai-seo-migrate-btn');
+        migrateBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var source    = this.dataset.source;
+                var resultBox = document.getElementById('ai-seo-' + source + '-result');
+                var overwriteCheckbox = document.getElementById('ai-seo-' + source + '-overwrite');
+                var overwrite = overwriteCheckbox ? overwriteCheckbox.checked : false;
+
+                if (overwrite && !confirm('Er du sikker på at du vil overskrive eksisterende AI SEO-data?')) {
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Importerer\u2026';
+
+                if (resultBox) {
+                    resultBox.style.display = 'none';
+                    resultBox.className = 'ai-seo-migration-result';
+                    resultBox.textContent = '';
+                }
+
+                var formData = new FormData();
+                formData.append('action', 'ai_seo_run_migration');
+                formData.append('nonce', aiSeo.nonce);
+                formData.append('source', source);
+                if (overwrite) {
+                    formData.append('overwrite', '1');
+                }
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', aiSeo.ajaxUrl, true);
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState !== 4) return;
+
+                    btn.disabled = false;
+                    btn.textContent = source === 'yoast' ? 'Importer fra Yoast SEO' : 'Importer fra Rank Math';
+
+                    if (xhr.status === 200 && resultBox) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success && response.data) {
+                                resultBox.className = 'ai-seo-migration-result ai-seo-migration-success';
+                                resultBox.textContent = 'Migrering fullf\u00f8rt! ' + response.data.migrated + ' innlegg oppdatert, ' + response.data.skipped + ' hoppet over.';
+                            } else {
+                                resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
+                                resultBox.textContent = response.data || 'En feil oppsto under migreringen.';
+                            }
+                        } catch (e) {
+                            resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
+                            resultBox.textContent = 'Kunne ikke tolke svaret fra serveren.';
+                        }
+                    }
+                };
+
+                xhr.onerror = function () {
+                    btn.disabled = false;
+                    btn.textContent = source === 'yoast' ? 'Importer fra Yoast SEO' : 'Importer fra Rank Math';
+                    if (resultBox) {
+                        resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
+                        resultBox.textContent = 'Nettverksfeil \u2013 kunne ikke kontakte serveren.';
+                    }
+                };
+
+                xhr.send(formData);
+            });
+        });
+
         // --- Copy cornerstone URL to clipboard ---
         var copyLinks = document.querySelectorAll('.ai-seo-copy-url');
         copyLinks.forEach(function (el) {

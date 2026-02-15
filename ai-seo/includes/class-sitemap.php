@@ -117,8 +117,14 @@ class AI_SEO_Sitemap {
     }
 
     private function render_sub_sitemap( $type, $page ) {
+        $is_post_type = in_array( $type, array( 'posts', 'pages' ), true ) || in_array( $type, $this->get_public_cpt(), true );
+
         echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        if ( $is_post_type ) {
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . "\n";
+        } else {
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        }
 
         switch ( $type ) {
             case 'posts':
@@ -172,11 +178,14 @@ class AI_SEO_Sitemap {
                 continue;
             }
 
+            $images = $this->get_post_images( $post );
+
             echo $this->build_url_entry(
                 get_permalink( $post ),
                 get_the_modified_date( 'c', $post ),
                 $changefreq,
-                $priority
+                $priority,
+                $images
             );
         }
     }
@@ -202,7 +211,7 @@ class AI_SEO_Sitemap {
         }
     }
 
-    private function build_url_entry( $loc, $lastmod = '', $changefreq = 'weekly', $priority = '0.5' ) {
+    private function build_url_entry( $loc, $lastmod = '', $changefreq = 'weekly', $priority = '0.5', $images = array() ) {
         $xml  = "  <url>\n";
         $xml .= "    <loc>" . esc_url( $loc ) . "</loc>\n";
         if ( $lastmod ) {
@@ -210,8 +219,87 @@ class AI_SEO_Sitemap {
         }
         $xml .= "    <changefreq>" . esc_html( $changefreq ) . "</changefreq>\n";
         $xml .= "    <priority>" . esc_html( $priority ) . "</priority>\n";
+
+        foreach ( $images as $image ) {
+            $xml .= "    <image:image>\n";
+            $xml .= "      <image:loc>" . esc_url( $image['url'] ) . "</image:loc>\n";
+            if ( ! empty( $image['title'] ) ) {
+                $xml .= "      <image:title>" . esc_html( $image['title'] ) . "</image:title>\n";
+            }
+            if ( ! empty( $image['alt'] ) ) {
+                $xml .= "      <image:caption>" . esc_html( $image['alt'] ) . "</image:caption>\n";
+            }
+            $xml .= "    </image:image>\n";
+        }
+
         $xml .= "  </url>\n";
         return $xml;
+    }
+
+    /**
+     * Extract images from a post (featured image + content images).
+     * Google allows up to 1000 images per page in the sitemap.
+     *
+     * @param WP_Post $post Post object.
+     * @return array Array of image data with 'url', 'title', 'alt'.
+     */
+    private function get_post_images( $post ) {
+        $images = array();
+        $seen   = array();
+
+        // Featured image.
+        if ( has_post_thumbnail( $post->ID ) ) {
+            $thumb_id  = get_post_thumbnail_id( $post->ID );
+            $thumb_url = wp_get_attachment_url( $thumb_id );
+            if ( $thumb_url ) {
+                $thumb_post = get_post( $thumb_id );
+                $images[]   = array(
+                    'url'   => $thumb_url,
+                    'title' => $thumb_post ? $thumb_post->post_title : '',
+                    'alt'   => get_post_meta( $thumb_id, '_wp_attachment_image_alt', true ),
+                );
+                $seen[ $thumb_url ] = true;
+            }
+        }
+
+        // Content images.
+        if ( ! empty( $post->post_content ) && preg_match_all( '/<img\s[^>]*src=["\']([^"\']+)["\'][^>]*>/i', $post->post_content, $matches, PREG_SET_ORDER ) ) {
+            foreach ( $matches as $match ) {
+                $url = $match[1];
+
+                // Skip data URIs and external tracking pixels.
+                if ( strpos( $url, 'data:' ) === 0 ) {
+                    continue;
+                }
+
+                // Make relative URLs absolute.
+                if ( strpos( $url, '//' ) === false ) {
+                    $url = home_url( $url );
+                }
+
+                if ( isset( $seen[ $url ] ) ) {
+                    continue;
+                }
+                $seen[ $url ] = true;
+
+                $alt   = '';
+                $title = '';
+                if ( preg_match( '/alt=["\']([^"\']*)["\']/', $match[0], $alt_match ) ) {
+                    $alt = $alt_match[1];
+                }
+                if ( preg_match( '/title=["\']([^"\']*)["\']/', $match[0], $title_match ) ) {
+                    $title = $title_match[1];
+                }
+
+                $images[] = array(
+                    'url'   => $url,
+                    'title' => $title,
+                    'alt'   => $alt,
+                );
+            }
+        }
+
+        return $images;
     }
 
     private function build_sitemap_entry( $loc ) {
