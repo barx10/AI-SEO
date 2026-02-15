@@ -40,59 +40,56 @@ require_once AI_SEO_PLUGIN_DIR . 'admin/bulk-columns.php';
  * Initialize plugin components.
  */
 function ai_seo_init() {
-    $options = get_option( 'ai_seo_options', array() );
+    $options   = get_option( 'ai_seo_options', array() );
+    $is_ajax   = defined( 'DOING_AJAX' ) && DOING_AJAX;
+    $is_admin  = is_admin();
 
-    // Always initialize meta handler.
-    $meta_handler = new AI_SEO_Meta_Handler();
-    $meta_handler->init();
+    // Frontend hooks (meta tags, sitemap, schema, breadcrumbs, redirects).
+    if ( ! $is_ajax ) {
+        $meta_handler = new AI_SEO_Meta_Handler();
+        $meta_handler->init();
 
-    // Sitemap module.
-    if ( ! isset( $options['enable_sitemap'] ) || $options['enable_sitemap'] ) {
-        $sitemap = new AI_SEO_Sitemap();
-        $sitemap->init();
+        if ( ! isset( $options['enable_sitemap'] ) || $options['enable_sitemap'] ) {
+            $sitemap = new AI_SEO_Sitemap();
+            $sitemap->init();
+        }
+
+        if ( ! isset( $options['enable_schema'] ) || $options['enable_schema'] ) {
+            $schema = new AI_SEO_Schema();
+            $schema->init();
+        }
+
+        if ( ! isset( $options['enable_breadcrumbs'] ) || $options['enable_breadcrumbs'] ) {
+            $breadcrumbs = new AI_SEO_Breadcrumbs();
+            $breadcrumbs->init();
+        }
+
+        if ( ! isset( $options['enable_redirects'] ) || $options['enable_redirects'] ) {
+            $redirects = new AI_SEO_Redirects();
+            $redirects->init();
+        }
     }
 
-    // Schema module.
-    if ( ! isset( $options['enable_schema'] ) || $options['enable_schema'] ) {
-        $schema = new AI_SEO_Schema();
-        $schema->init();
+    // Admin UI hooks (settings, meta box, pages, columns, dashboard).
+    if ( $is_admin && ! $is_ajax ) {
+        $settings = new AI_SEO_Settings_Page();
+        $settings->init();
+
+        $meta_box = new AI_SEO_Meta_Box();
+        $meta_box->init();
+
+        $redirects_page = new AI_SEO_Redirects_Page();
+        $redirects_page->init();
+
+        $dashboard = new AI_SEO_Dashboard_Widget();
+        $dashboard->init();
+
+        $migration_page = new AI_SEO_Migration_Page();
+        $migration_page->init();
+
+        $bulk_columns = new AI_SEO_Bulk_Columns();
+        $bulk_columns->init();
     }
-
-    // Breadcrumbs module.
-    if ( ! isset( $options['enable_breadcrumbs'] ) || $options['enable_breadcrumbs'] ) {
-        $breadcrumbs = new AI_SEO_Breadcrumbs();
-        $breadcrumbs->init();
-    }
-
-    // Redirects module.
-    if ( ! isset( $options['enable_redirects'] ) || $options['enable_redirects'] ) {
-        $redirects = new AI_SEO_Redirects();
-        $redirects->init();
-    }
-
-    // Settings page.
-    $settings = new AI_SEO_Settings_Page();
-    $settings->init();
-
-    // Meta box.
-    $meta_box = new AI_SEO_Meta_Box();
-    $meta_box->init();
-
-    // Redirects admin page.
-    $redirects_page = new AI_SEO_Redirects_Page();
-    $redirects_page->init();
-
-    // Dashboard widget.
-    $dashboard = new AI_SEO_Dashboard_Widget();
-    $dashboard->init();
-
-    // Migration page.
-    $migration_page = new AI_SEO_Migration_Page();
-    $migration_page->init();
-
-    // Bulk columns in post list views.
-    $bulk_columns = new AI_SEO_Bulk_Columns();
-    $bulk_columns->init();
 }
 add_action( 'plugins_loaded', 'ai_seo_init' );
 
