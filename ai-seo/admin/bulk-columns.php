@@ -45,6 +45,7 @@ class AI_SEO_Bulk_Columns {
         switch ( $column ) {
             case 'ai_seo_title':
                 $value = get_post_meta( $post_id, '_ai_seo_meta_title', true );
+                $display = $value ? mb_substr( $value, 0, 40 ) . ( mb_strlen( $value ) > 40 ? '…' : '' ) : '—';
                 printf(
                     '<div class="ai-seo-inline-edit" data-post-id="%d" data-field="meta_title" data-max="70" title="Klikk for å redigere">'
                     . '<span class="ai-seo-inline-value %s">%s</span>'
@@ -52,7 +53,7 @@ class AI_SEO_Bulk_Columns {
                     . '</div>',
                     esc_attr( $post_id ),
                     $value ? '' : 'ai-seo-inline-empty',
-                    esc_html( $value ? $value : '—' ),
+                    esc_html( $display ),
                     esc_attr( $value )
                 );
                 break;

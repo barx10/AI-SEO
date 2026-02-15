@@ -709,30 +709,76 @@
 
 /* --- Bulk Column Inline Editing --- */
 
-.column-ai_seo_title,
-.column-ai_seo_description {
+/*
+ * Column width budget (wp-list-table.fixed = table-layout:fixed)
+ * ---------------------------------------------------------------
+ * cb (checkbox)        ~2.2em   (WP default)
+ * title                 25%     (set below – protects from collapse)
+ * ai_seo_title           8%
+ * ai_seo_description    10%
+ * ai_seo_score          45px
+ * author                10%     (WP default)
+ * categories             8%     (reduced from WP 15%)
+ * tags                   8%     (reduced from WP 15%)
+ * comments             ~35px    (WP default)
+ * date                  10%     (WP default)
+ * ---------------------------------------------------------------
+ * Total ≈ 79% + ~115px  →  leaves breathing room
+ */
+
+/* Protect the WordPress title column */
+.wp-list-table.fixed .column-title {
+    width: 25%;
+}
+
+/* Shrink categories & tags so everything fits */
+.wp-list-table.fixed .column-categories,
+.wp-list-table.fixed .column-tags {
+    width: 8%;
+}
+
+/* SEO columns */
+.wp-list-table.fixed .column-ai_seo_title {
+    width: 8%;
+}
+
+.wp-list-table.fixed .column-ai_seo_description {
     width: 10%;
 }
 
-.column-ai_seo_score {
-    width: 50px;
+.wp-list-table.fixed .column-ai_seo_score {
+    width: 45px;
     text-align: center;
+}
+
+/* Prevent content from overflowing the cells */
+td.column-ai_seo_title,
+td.column-ai_seo_description {
+    overflow: hidden;
+}
+
+/* Truncate inline values to one line with ellipsis */
+.column-ai_seo_title .ai-seo-inline-edit,
+.column-ai_seo_description .ai-seo-inline-edit {
+    display: block;
+    overflow: hidden;
 }
 
 .column-ai_seo_title .ai-seo-inline-value,
 .column-ai_seo_description .ai-seo-inline-value {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+/* General inline-edit styles */
 .ai-seo-inline-edit {
     cursor: pointer;
     min-height: 20px;
 }
 
 .ai-seo-inline-value {
-    display: block;
     font-size: 13px;
     line-height: 1.4;
     color: #1d2327;
@@ -764,6 +810,7 @@
     opacity: 0.6;
 }
 
+/* Score badge */
 .ai-seo-col-score {
     display: inline-block;
     min-width: 28px;
