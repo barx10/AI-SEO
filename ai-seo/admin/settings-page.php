@@ -341,10 +341,6 @@ class AI_SEO_Settings_Page {
             <?php else : ?>
                 <p class="description">Skriv inn API-nøkkelen din. Den vil bli kryptert ved lagring.</p>
             <?php endif; ?>
-            <p class="description">
-                <strong>Anbefalt:</strong> Definer nøkkelen i <code>wp-config.php</code> i stedet:<br />
-                <code>define( 'AI_SEO_API_KEY', 'din-nøkkel-her' );</code>
-            </p>
         <?php endif;
     }
 
