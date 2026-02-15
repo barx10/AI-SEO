@@ -19,7 +19,14 @@ define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 /**
  * Load plugin classes.
+ *
+ * Output buffering guards against stray bytes (BOM, trailing whitespace)
+ * that may be introduced by editors or FTP transfers.  Even a single byte
+ * of unexpected output will corrupt WordPress AJAX JSON responses and
+ * break the media-library grid view.
  */
+ob_start();
+
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-ai-client.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-meta-handler.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-sitemap.php';
@@ -35,6 +42,8 @@ require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/redirects-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/migration-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/bulk-columns.php';
+
+ob_end_clean();
 
 /**
  * Initialize plugin components.
@@ -465,12 +474,16 @@ add_action( 'wp_ajax_ai_seo_run_migration', 'ai_seo_ajax_run_migration' );
  * Flush rewrite rules and create DB tables on activation.
  */
 function ai_seo_activate() {
+    ob_start();
+
     $sitemap = new AI_SEO_Sitemap();
     $sitemap->init();
 
     AI_SEO_Redirects::create_table();
 
     flush_rewrite_rules();
+
+    ob_end_clean();
 }
 register_activation_hook( __FILE__, 'ai_seo_activate' );
 
