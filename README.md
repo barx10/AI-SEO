@@ -69,22 +69,28 @@ Pluginet beregner en SEO-poengsum (0–100) basert på 14 kontroller:
 
 | Kontroll | Vekt |
 |----------|------|
-| Tittel satt og riktig lengde (50–70 tegn) | 10 |
-| Metabeskrivelse satt | 10 |
+| Tittel satt og riktig lengde (30–60 tegn) | 10 |
+| Metabeskrivelse satt (120–160 tegn) | 10 |
 | Innhold over 300 ord | 10 |
 | Fokus-søkeord satt | 5 |
 | Søkeord i SEO-tittel | 10 |
-| Søkeord i metabeskrivelse | 8 |
-| Søkeord i første avsnitt | 7 |
-| Søkeord i underoverskrift | 5 |
-| Søkeordtetthet 1–3 % | 8 |
-| Bilder har alt-tekst | 7 |
-| Interne lenker i innholdet | 7 |
+| Søkeord i metabeskrivelse | 10 |
+| Søkeord i første avsnitt | 10 |
+| Søkeord i underoverskrift (H2–H6) | 5 |
+| Søkeordtetthet 1–3 % | 5 |
+| Bilder har alt-tekst | 5 |
+| Interne lenker i innholdet | 5 |
 | Eksterne lenker i innholdet | 5 |
-| Underoverskrifter brukt (H2/H3) | 5 |
-| Fremhevet bilde satt | 3 |
+| Underoverskrifter brukt (H2) | 5 |
+| Fremhevet bilde satt | 5 |
 
-Sjekklisten vises med grønne haker og røde kryss i meta-boksen, slik at du raskt ser hva som kan forbedres.
+Poengsummen klassifiseres som:
+
+- **Utmerket** (80–100) – grønn
+- **Akseptabel** (50–79) – gul
+- **Dårlig** (0–49) – rød
+
+Sjekklisten vises med grønne haker og røde kryss i meta-boksen, slik at du raskt ser hva som kan forbedres. Bruk **Oppdater poengsum**-knappen for å analysere innholdet på nytt.
 
 ### Robots-metadirektiver
 
@@ -95,7 +101,7 @@ Per innlegg/side kan du sette følgende robots-direktiver:
 - **noarchive** – Hindrer caching av siden
 - **nosnippet** – Hindrer visning av tekstutdrag i søkeresultatene
 
-Sider med `noindex` ekskluderes automatisk fra XML-sitemapen.
+Hvert direktiv har et verktøytips som forklarer hva det gjør. Sider med `noindex` ekskluderes automatisk fra XML-sitemapen.
 
 ### Cornerstone-innhold
 
@@ -111,7 +117,7 @@ For hvert innlegg kan du velge Schema.org-type:
 
 ### Sosialt bilde
 
-Du kan velge et egendefinert sosialt bilde per innlegg via WordPress sitt mediebibliotek. Dette bildet brukes i OpenGraph- og Twitter Card-metatagger i stedet for det fremhevede bildet.
+Du kan velge et egendefinert sosialt bilde per innlegg via WordPress sitt mediebibliotek. Dette bildet brukes i OpenGraph- og Twitter Card-metatagger i stedet for det fremhevede bildet. En forhåndsvisning av det valgte bildet vises i meta-boksen.
 
 ### Lesbarhetsanalyse
 
@@ -119,7 +125,7 @@ Pluginet analyserer innholdet ditt og gir en lesbarhetspoengsum (0–100) basert
 
 - **Gjennomsnittlig setningslengde** – Ideelt 15–20 ord per setning (20 poeng)
 - **Gjennomsnittlig ordlengde** – Ideelt 4–6 tegn (15 poeng)
-- **Flesch-Kincaid lesbarhetsindeks** – Tilpasset norsk (25 poeng)
+- **Flesch-Kincaid lesbarhetsindeks** – Tilpasset norsk med redusert stavelsekoeffisient (25 poeng)
 - **Passiv stemme** – Ideelt under 10 % av setningene (15 poeng)
 - **Overgangsord** – Ideelt over 30 % av setningene (15 poeng)
 - **Lange setninger** – Andelen setninger over 25 ord (10 poeng)
@@ -130,20 +136,39 @@ Poengsummen klassifiseres som:
 - **Middels lesbarhet** (40–69) – gul
 - **Dårlig lesbarhet** (0–39) – rød
 
-Detaljerte forbedringsforslag vises under poengsummen.
+Detaljerte forbedringsforslag vises under poengsummen, inkludert:
+- Forslag om å forkorte setninger
+- Redusere bruk av passiv stemme
+- Legge til flere overgangsord
+- Bryte opp lange avsnitt (over 150 ord)
+
+Problematiske setninger markeres visuelt med forklarende verktøytips, slik at du enkelt ser hvilke setninger som bør forbedres.
 
 ### AI-verktøy
 
-Meta-boksen inneholder fire AI-drevne knapper som sender innholdet til den valgte AI-leverandøren:
+Meta-boksen inneholder fem AI-drevne knapper som sender innholdet til den valgte AI-leverandøren:
 
 | Knapp | Funksjon |
 |-------|----------|
+| **Foreslå fokusord** | AI analyserer innholdet og anbefaler det beste fokus-søkeordet å optimalisere for. |
+| **Foreslå tittel** | AI foreslår 3 SEO-optimaliserte titler (30–60 tegn). Hvis fokus-søkeord er fylt inn, inkluderes det i forslagene. |
 | **Generer metabeskrivelse** | AI lager en engasjerende metabeskrivelse (maks 160 tegn) basert på innholdet. Resultatet fylles automatisk inn i feltet. |
-| **Foreslå tittel** | AI foreslår 3 SEO-optimaliserte titler. Hvis fokus-søkeord er fylt inn, inkluderes det i forslagene. |
 | **Analyser søkeord** | AI analyserer søkeordtettheten, viser de 10 mest brukte ordene med prosentandel, og gir 3 konkrete forbedringsforslag. |
-| **Foreslå interne lenker** | AI foreslår relevante interne lenker basert på innholdet og eksisterende sider, med anbefalt ankertekst. |
+| **Foreslå interne lenker** | AI foreslår relevante interne lenker basert på innholdet og eksisterende sider, med anbefalt ankertekst og forklaring av relevans. |
 
 En spinner vises mens AI-kallet pågår. Forespørsler er hastighetsbegrenset til 30 per minutt per bruker.
+
+## Innleggsliste med SEO-kolonner
+
+I WordPress sin innleggsliste legger pluginet til tre ekstra kolonner:
+
+| Kolonne | Beskrivelse |
+|---------|-------------|
+| **SEO-tittel** | Viser de første 40 tegnene av SEO-tittelen |
+| **Metabeskrivelse** | Viser de første 60 tegnene av metabeskrivelsen |
+| **SEO-poengsum** | Visuell poengsum med fargekoding (grønn/gul/rød) |
+
+**Inline-redigering:** Klikk direkte på SEO-tittel eller metabeskrivelse i innleggslisten for å redigere dem uten å åpne innlegget. Endringer lagres via AJAX uten sidelasting. Tegntellere håndhever maks 70 tegn for tittel og 160 tegn for beskrivelse.
 
 ## Omdirigeringer
 
@@ -153,7 +178,12 @@ Omdirigeringsmodulen finner du under **Verktøy > Omdirigeringer**. Her kan du:
 - Se antall treff (hits) per omdirigering
 - Slette eksisterende omdirigeringer
 
-Omdirigeringer lagres i en egen databasetabell og håndteres tidlig i WordPress sin forespørselsflyt.
+Modulen inkluderer automatisk deteksjon av:
+
+- **Omdirigeringskjeder** – Varsler når en omdirigering peker til en URL som selv omdirigeres videre (A → B → C)
+- **Omdirigeringsløkker** – Oppdager sirkulære omdirigeringer (A → B → A) som kan forårsake uendelig omdirigeringsløkker
+
+Omdirigeringer lagres i en egen databasetabell med treffeller og tidsstempler, og håndteres tidlig i WordPress sin forespørselsflyt for rask ytelse. Resultatene pagineres med 50 per side.
 
 ## Brødsmuler
 
@@ -166,20 +196,39 @@ Brødsmuler aktiveres som modul i innstillingene. Bruk shortcoden i dine maler e
 Brødsmulene støtter:
 - Innlegg (med kategori-hierarki)
 - Sider (med foreldreside-hierarki)
-- Egendefinerte innholdstyper
-- Kategorier, stikkord og arkiver
+- Egendefinerte innholdstyper (med arkivlenke)
+- Kategorier (med foreldrekategori-hierarki), stikkord og arkiver
 - Søkeresultater og 404-sider
 
-BreadcrumbList JSON-LD-strukturdata legges automatisk til i `<head>` på alle sider (unntatt forsiden).
+Brødsmulene er fullt tilgjengelige med ARIA-merking. BreadcrumbList JSON-LD-strukturdata legges automatisk til i `<head>` på alle sider (unntatt forsiden).
+
+## Migrering fra andre SEO-plugins
+
+Under **Verktøy > Migrering** kan du importere SEO-data fra andre plugins:
+
+### Støttede plugins
+
+| Plugin | Migrerte felt |
+|--------|---------------|
+| **Yoast SEO** | SEO-tittel, metabeskrivelse, fokus-søkeord, robots-meta (noindex/nofollow), sosialt bilde, cornerstone-flagg |
+| **Rank Math** | SEO-tittel, metabeskrivelse, fokus-søkeord (første hvis kommaseparert), robots-meta (noindex/nofollow/noarchive/nosnippet), sosialt bilde, pilarinnhold |
+
+### Migreringsfunksjoner
+
+- **Deteksjonsverktøy** – Skanner databasen for eksisterende Yoast/Rank Math-data før migrering
+- **Overskriv-valg** – Velg om eksisterende AI SEO-data skal overskrives eller beholdes
+- **Variabelrensing** – Fjerner automatisk Yoast-variabler (`%%title%%` osv.) og Rank Math-variabler (`%title%` osv.)
+- **Migreringsrapport** – Viser antall migrerte og hoppede elementer etter fullført import
 
 ## Dashboard-widget
 
 Etter aktivering vises en **AI SEO – Oversikt**-widget på WordPress-dashbordet med:
 
-- Antall innlegg som mangler metabeskrivelse, SEO-tittel, fokus-søkeord eller fremhevet bilde
+- Totalt antall publiserte innlegg og sider
+- Antall innlegg som mangler metabeskrivelse, SEO-tittel, fokus-søkeord eller fremhevet bilde (med varselfarge)
 - Antall cornerstone-sider
-- De 5 innleggene med dårligst lesbarhet
-- Status for AI-leverandør og API-nøkkel
+- De 5 innleggene med dårligst lesbarhet (med direkte redigeringslenker)
+- Status for AI-leverandør og API-nøkkel (grønn hvis konfigurert, rød hvis mangler)
 
 ## Automatiske funksjoner
 
@@ -196,14 +245,14 @@ Følgende metatagger legges til i `<head>`:
 - `article:published_time`, `article:modified_time`, `article:tag`, `article:section` (på innlegg)
 
 ### Twitter Cards
-- `twitter:card` (summary eller summary_large_image)
+- `twitter:card` (summary eller summary_large_image avhengig av om bilde finnes)
 - `twitter:title`, `twitter:description`, `twitter:image`
 - `twitter:site`, `twitter:creator` (hvis Twitter-brukernavn er satt)
 
 ### Schema.org-markering
-- **Article** – På enkeltinnlegg med forfatter, dato, bilde og ordtelling
-- **FAQPage** – Når schema-type er satt til FAQ
-- **HowTo** – Når schema-type er satt til HowTo
+- **Article** – På enkeltinnlegg med forfatter, dato, bilde, ordtelling og nøkkelord fra kategorier
+- **FAQPage** – Når schema-type er satt til FAQ (spørsmål fra H3-overskrifter)
+- **HowTo** – Når schema-type er satt til HowTo (trinn fra H3-overskrifter)
 - **Organization / LocalBusiness** – På forsiden med bedriftsinformasjon fra innstillingene
 - **BreadcrumbList** – Automatisk på alle sider når brødsmuler er aktivert
 
@@ -211,18 +260,20 @@ Følgende metatagger legges til i `<head>`:
 Sitemapen er organisert som en sitemap-indeks med separate sub-sitemaps:
 
 - `/sitemap.xml` – Indeksfil som peker til alle sub-sitemaps
-- `/sitemap-post-1.xml` – Innlegg (1000 per side)
-- `/sitemap-page-1.xml` – Sider (1000 per side)
+- `/sitemap-posts-1.xml` – Innlegg (1000 per side)
+- `/sitemap-pages-1.xml` – Sider (1000 per side)
 - `/sitemap-{cpt}-1.xml` – Egendefinerte innholdstyper
-- `/sitemap-category-1.xml` – Kategorier
-- `/sitemap-post_tag-1.xml` – Stikkord
+- `/sitemap-categories.xml` – Kategorier
+- `/sitemap-tags.xml` – Stikkord
 
 Funksjoner:
+- Inkluderer bilder med URL, tittel og alt-tekst for Google Bildesøk
 - Caching med transients (1 time)
 - Automatisk cache-invalidering ved innleggsendringer og taksonomiendringer
 - Søkemotorpinging (Google og Bing) ved publisering
 - Ekskludering av sider med `noindex`-direktiv
 - Støtte for alle offentlige egendefinerte innholdstyper
+- Automatisk paginering for store nettsteder
 
 ## Skaffe API-nøkler
 
@@ -234,11 +285,14 @@ Funksjoner:
 
 - Alle AJAX-forespørsler valideres med WordPress nonce
 - Innstillingssiden krever `manage_options`-tilgang (administrator)
-- Meta-boksen krever `edit_posts`-tilgang
-- All brukerinndata saniteres med `sanitize_text_field` og `wp_kses_post`
+- Meta-boksen krever `edit_posts`-tilgang (redaktør, forfatter)
+- Omdirigeringer og migrering krever `manage_options`-tilgang (administrator)
+- All brukerinndata saniteres med `sanitize_text_field`, `esc_url_raw`, `sanitize_email` og `wp_kses_post`
+- All utdata escapes med `esc_html`, `esc_attr`, `esc_url`
+- Databasespørringer bruker prepared statements
 - API-nøkkelen krypteres med **Sodium** (`sodium_crypto_secretbox`) før lagring i databasen, med XOR-fallback hvis Sodium ikke er tilgjengelig
+- API-nøkkel kan også defineres som konstant (`AI_SEO_API_KEY`) i `wp-config.php` – denne har forrang over databaseverdien
 - **Hastighetsbegrensning**: Maks 30 AI-forespørsler per minutt per bruker
-- Omdirigeringshandlinger beskyttes med nonce-verifisering
 
 ## Krav
 
