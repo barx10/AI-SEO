@@ -36,6 +36,11 @@ class AI_SEO_Settings_Page {
             'sanitize_callback' => array( $this, 'sanitize_options' ),
         ) );
 
+        // General section.
+        add_settings_section( 'ai_seo_general_section', 'Generelt', array( $this, 'render_general_section' ), 'ai-seo' );
+
+        add_settings_field( 'content_language', 'Innholdsspråk', array( $this, 'render_language_field' ), 'ai-seo', 'ai_seo_general_section' );
+
         // API section.
         add_settings_section( 'ai_seo_api_section', 'API-innstillinger', array( $this, 'render_api_section' ), 'ai-seo' );
 
@@ -68,6 +73,11 @@ class AI_SEO_Settings_Page {
 
     public function sanitize_options( $input ) {
         $sanitized = array();
+
+        // Content language.
+        $sanitized['content_language'] = isset( $input['content_language'] ) && in_array( $input['content_language'], array( 'nb', 'en' ), true )
+            ? $input['content_language']
+            : 'nb';
 
         $sanitized['ai_provider'] = isset( $input['ai_provider'] ) && in_array( $input['ai_provider'], array( 'anthropic', 'openai', 'google' ), true )
             ? $input['ai_provider']
@@ -238,6 +248,22 @@ class AI_SEO_Settings_Page {
     }
 
     // --- Render callbacks ---
+
+    public function render_general_section() {
+        echo '<p>Grunnleggende innstillinger for innholdsanalyse.</p>';
+    }
+
+    public function render_language_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $lang    = isset( $options['content_language'] ) ? $options['content_language'] : 'nb';
+        ?>
+        <select name="ai_seo_options[content_language]">
+            <option value="nb" <?php selected( $lang, 'nb' ); ?>>Norsk</option>
+            <option value="en" <?php selected( $lang, 'en' ); ?>>English</option>
+        </select>
+        <p class="description">Velg språket innholdet ditt er skrevet på. Dette påvirker lesbarhetsanalysen (Flesch-Kincaid-koeffisient, passiv stemme, overgangsord).</p>
+        <?php
+    }
 
     public function render_api_section() {
         echo '<p>Konfigurer tilkoblingen til AI-tjenesten.</p>';
