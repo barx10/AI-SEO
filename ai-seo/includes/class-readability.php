@@ -5,62 +5,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AI_SEO_Readability {
 
-    /** @var array|null Cached language configuration. */
-    private $cfg = null;
+    /**
+     * Norwegian passive voice auxiliary verbs.
+     */
+    private static $passive_markers = array(
+        'ble', 'blitt', 'blir', 'blei',
+    );
 
     /**
-     * Return the language configuration based on the content_language setting.
-     *
-     * @return array
+     * Norwegian transition words.
      */
-    private function cfg() {
-        if ( null !== $this->cfg ) {
-            return $this->cfg;
-        }
-
-        $options = get_option( 'ai_seo_options', array() );
-        $lang    = isset( $options['content_language'] ) ? $options['content_language'] : 'nb';
-
-        if ( 'en' === $lang ) {
-            $this->cfg = array(
-                'lang'             => 'en',
-                'vowel_regex'      => '/[aeiouy]+/u',
-                'flesch_coeff'     => 84.6,
-                'passive_markers'  => array( 'was', 'were', 'been', 'being', 'is', 'are', 'got' ),
-                'passive_regex'    => '/\b(was|were|been|being|is|are|got)\s+\w+(ed|en)\b/iu',
-                'transition_words' => array(
-                    'furthermore', 'moreover', 'in addition', 'firstly', 'secondly',
-                    'for example', 'for instance', 'such as', 'in other words', 'that is',
-                    'on the other hand', 'however', 'nevertheless', 'nonetheless', 'despite',
-                    'although', 'because', 'since', 'therefore', 'consequently',
-                    'as a result', 'in conclusion', 'to summarize', 'overall',
-                    'in summary', 'in short', 'above all', 'finally',
-                    'meanwhile', 'subsequently', 'then', 'ultimately',
-                    'but', 'also', 'thus', 'hence', 'namely', 'otherwise',
-                ),
-            );
-        } else {
-            $this->cfg = array(
-                'lang'             => 'nb',
-                'vowel_regex'      => '/[aeiouyæøå]+/u',
-                'flesch_coeff'     => 66.0,
-                'passive_markers'  => array( 'ble', 'blitt', 'blir', 'blei' ),
-                'passive_regex'    => '/\b(ble|blitt|blir|blei)\s+\w+(t|et|dd)\b/u',
-                'transition_words' => array(
-                    'dessuten', 'videre', 'i tillegg', 'for det første', 'for det andre',
-                    'for eksempel', 'blant annet', 'det vil si', 'med andre ord',
-                    'på den andre siden', 'derimot', 'imidlertid', 'likevel', 'til tross for',
-                    'selv om', 'fordi', 'ettersom', 'derfor', 'dermed', 'følgelig',
-                    'som et resultat', 'konklusjonen er', 'oppsummert', 'alt i alt',
-                    'for å oppsummere', 'kort sagt', 'først og fremst', 'til slutt',
-                    'samtidig', 'i mellomtiden', 'deretter', 'så', 'endelig',
-                    'men', 'også', 'slik', 'altså', 'nemlig', 'ellers',
-                ),
-            );
-        }
-
-        return $this->cfg;
-    }
+    private static $transition_words = array(
+        'dessuten', 'videre', 'i tillegg', 'for det første', 'for det andre',
+        'for eksempel', 'blant annet', 'det vil si', 'med andre ord',
+        'på den andre siden', 'derimot', 'imidlertid', 'likevel', 'til tross for',
+        'selv om', 'fordi', 'ettersom', 'derfor', 'dermed', 'følgelig',
+        'som et resultat', 'konklusjonen er', 'oppsummert', 'alt i alt',
+        'for å oppsummere', 'kort sagt', 'først og fremst', 'til slutt',
+        'samtidig', 'i mellomtiden', 'deretter', 'så', 'endelig',
+        'men', 'også', 'slik', 'altså', 'nemlig', 'ellers',
+    );
 
     /**
      * Analyze text readability with extended metrics.
@@ -69,12 +33,10 @@ class AI_SEO_Readability {
      * @return array  Analysis results.
      */
     public function analyze( $text ) {
-        $cfg      = $this->cfg();
-        $is_en    = 'en' === $cfg['lang'];
         $defaults = array(
             'score'               => 0,
             'rating'              => 'none',
-            'label'               => $is_en ? 'No content to analyze' : 'Ingen innhold å analysere',
+            'label'               => 'Ingen innhold å analysere',
             'avg_sentence_length' => 0,
             'avg_word_length'     => 0,
             'sentence_count'      => 0,
@@ -110,6 +72,7 @@ class AI_SEO_Readability {
         $avg_word_length     = $this->average_word_length( $words );
         $syllable_count      = $this->count_syllables_total( $words );
 
+        // Flesch-Kincaid adapted for Norwegian.
         $flesch_kincaid = $this->flesch_kincaid_score( $word_count, $sentence_count, $syllable_count );
 
         // Passive voice percentage.
@@ -208,45 +171,39 @@ class AI_SEO_Readability {
     }
 
     /**
-     * Approximate syllable count.
-     *
-     * Norwegian includes æ, ø, å as vowels.
-     * English uses standard a-e-i-o-u-y.
+     * Approximate syllable count for a Norwegian word.
      */
     private function count_syllables( $word ) {
         $word  = mb_strtolower( $word );
-        $cfg   = $this->cfg();
-        $count = preg_match_all( $cfg['vowel_regex'], $word );
+        $count = preg_match_all( '/[aeiouyæøå]+/u', $word );
         return max( 1, $count );
     }
 
     /**
-     * Calculate Flesch Reading Ease.
+     * Calculate Flesch Reading Ease adapted for Norwegian.
      *
-     * Norwegian uses a reduced syllable coefficient (66.0) because
-     * compound words and inflectional morphology yield more syllables.
-     * English uses the standard coefficient (84.6).
+     * The syllable coefficient is reduced from 84.6 (English) to 66.0
+     * because Norwegian naturally has more syllables per word due to
+     * compound words and inflectional morphology.
      */
     private function flesch_kincaid_score( $words, $sentences, $syllables ) {
         if ( $sentences === 0 || $words === 0 ) {
             return 0;
         }
-        $cfg   = $this->cfg();
         $score = 206.835
             - ( 1.015 * ( $words / $sentences ) )
-            - ( $cfg['flesch_coeff'] * ( $syllables / $words ) );
+            - ( 66.0 * ( $syllables / $words ) );
 
         return (int) round( max( 0, min( 100, $score ) ) );
     }
 
     private function count_passive_sentences( $sentences ) {
-        $cfg   = $this->cfg();
         $count = 0;
         foreach ( $sentences as $s ) {
             $lower = mb_strtolower( $s );
-            foreach ( $cfg['passive_markers'] as $marker ) {
+            foreach ( self::$passive_markers as $marker ) {
                 if ( mb_strpos( $lower, $marker ) !== false ) {
-                    if ( preg_match( $cfg['passive_regex'], $lower ) ) {
+                    if ( preg_match( '/\b(' . implode( '|', self::$passive_markers ) . ')\s+\w+(t|et|dd)\b/u', $lower ) ) {
                         $count++;
                         break;
                     }
@@ -257,11 +214,10 @@ class AI_SEO_Readability {
     }
 
     private function count_transition_sentences( $sentences ) {
-        $cfg   = $this->cfg();
         $count = 0;
         foreach ( $sentences as $s ) {
             $lower = mb_strtolower( $s );
-            foreach ( $cfg['transition_words'] as $tw ) {
+            foreach ( self::$transition_words as $tw ) {
                 if ( mb_strpos( $lower, $tw ) !== false ) {
                     $count++;
                     break;
@@ -272,7 +228,7 @@ class AI_SEO_Readability {
     }
 
     /**
-     * Calculate composite readability score (0-100).
+     * Calculate composite readability score (0–100).
      */
     private function calculate_composite_score( $avg_sentence_length, $avg_word_length, $flesch, $passive_pct, $transition_pct, $long_pct ) {
         // Sentence length (20 pts).
@@ -339,15 +295,13 @@ class AI_SEO_Readability {
     }
 
     private function get_label( $score ) {
-        $is_en = 'en' === $this->cfg()['lang'];
-
         if ( $score >= 80 ) {
-            return $is_en ? 'Good readability' : 'God lesbarhet';
+            return 'God lesbarhet';
         }
         if ( $score >= 50 ) {
-            return $is_en ? 'Fair readability' : 'Middels lesbarhet';
+            return 'Middels lesbarhet';
         }
-        return $is_en ? 'Poor readability' : 'Dårlig lesbarhet';
+        return 'Dårlig lesbarhet';
     }
 
     /**
@@ -399,8 +353,6 @@ class AI_SEO_Readability {
             return $sentence;
         }
 
-        $cfg     = $this->cfg();
-        $is_en   = 'en' === $cfg['lang'];
         $classes = array();
         $tips    = array();
 
@@ -409,18 +361,16 @@ class AI_SEO_Readability {
         $wc    = count( $words );
         if ( $wc > 25 ) {
             $classes[] = 'ai-seo-hl-long';
-            $tips[]    = $is_en
-                ? $wc . ' words – try splitting this sentence'
-                : $wc . ' ord – forsøk å dele opp';
+            $tips[]    = $wc . ' ord – forsøk å dele opp';
         }
 
         // Passive voice check.
         $lower = mb_strtolower( $trimmed );
-        foreach ( $cfg['passive_markers'] as $marker ) {
+        foreach ( self::$passive_markers as $marker ) {
             if ( mb_strpos( $lower, $marker ) !== false ) {
-                if ( preg_match( $cfg['passive_regex'], $lower ) ) {
+                if ( preg_match( '/\b(' . implode( '|', self::$passive_markers ) . ')\s+\w+(t|et|dd)\b/u', $lower ) ) {
                     $classes[] = 'ai-seo-hl-passive';
-                    $tips[]    = $is_en ? 'passive voice' : 'passiv stemme';
+                    $tips[]    = 'passiv stemme';
                     break;
                 }
             }
@@ -436,49 +386,34 @@ class AI_SEO_Readability {
     }
 
     private function build_suggestions( $avg_sentence, $passive_pct, $transition_pct, $long_pct, $long_paras, $flesch, $word_count ) {
-        $is_en       = 'en' === $this->cfg()['lang'];
         $suggestions = array();
 
         if ( $avg_sentence > 20 ) {
-            $suggestions[] = $is_en
-                ? 'Average sentence length is ' . $avg_sentence . ' words. Try to keep it under 20.'
-                : 'Gjennomsnittlig setningslengde er ' . $avg_sentence . ' ord. Forsøk å holde den under 20.';
+            $suggestions[] = 'Gjennomsnittlig setningslengde er ' . $avg_sentence . ' ord. Forsøk å holde den under 20.';
         }
 
         if ( $passive_pct > 10 ) {
-            $suggestions[] = $is_en
-                ? sprintf( '%.0f%% of sentences use passive voice. Try to keep it under 10%%.', $passive_pct )
-                : sprintf( '%.0f %% av setningene bruker passiv stemme. Forsøk å holde det under 10 %%.', $passive_pct );
+            $suggestions[] = sprintf( '%.0f %% av setningene bruker passiv stemme. Forsøk å holde det under 10 %%.', $passive_pct );
         }
 
         if ( $transition_pct < 30 ) {
-            $suggestions[] = $is_en
-                ? sprintf( 'Only %.0f%% of sentences contain transition words. Use more for better flow (aim for 30%%+).', $transition_pct )
-                : sprintf( 'Kun %.0f %% av setningene inneholder overgangsord. Bruk flere for bedre flyt (mål: 30 %%+).', $transition_pct );
+            $suggestions[] = sprintf( 'Kun %.0f %% av setningene inneholder overgangsord. Bruk flere for bedre flyt (mål: 30 %%+).', $transition_pct );
         }
 
         if ( $long_pct > 25 ) {
-            $suggestions[] = $is_en
-                ? sprintf( '%.0f%% of sentences are over 25 words. Try splitting the longest sentences.', $long_pct )
-                : sprintf( '%.0f %% av setningene er over 25 ord. Forsøk å dele opp de lengste setningene.', $long_pct );
+            $suggestions[] = sprintf( '%.0f %% av setningene er over 25 ord. Forsøk å dele opp de lengste setningene.', $long_pct );
         }
 
         if ( $long_paras > 0 ) {
-            $suggestions[] = $is_en
-                ? sprintf( '%d paragraphs have over 150 words. Use shorter paragraphs for better readability.', $long_paras )
-                : sprintf( '%d avsnitt har over 150 ord. Bruk kortere avsnitt for bedre lesbarhet.', $long_paras );
+            $suggestions[] = sprintf( '%d avsnitt har over 150 ord. Bruk kortere avsnitt for bedre lesbarhet.', $long_paras );
         }
 
         if ( $flesch < 50 ) {
-            $suggestions[] = $is_en
-                ? 'Flesch readability index is low (' . $flesch . '/100). Consider simpler sentence structures and shorter words.'
-                : 'Flesch-lesbarhetsindeksen er lav (' . $flesch . '/100). Vurder enklere setningsstrukturer og kortere ord.';
+            $suggestions[] = 'Flesch-lesbarhetsindeksen er lav (' . $flesch . '/100). Vurder enklere setningsstrukturer og kortere ord.';
         }
 
         if ( $word_count < 300 ) {
-            $suggestions[] = $is_en
-                ? 'The content has only ' . $word_count . ' words. Search engines prefer at least 300 words.'
-                : 'Innholdet har kun ' . $word_count . ' ord. Søkemotorer foretrekker minst 300 ord.';
+            $suggestions[] = 'Innholdet har kun ' . $word_count . ' ord. Søkemotorer foretrekker minst 300 ord.';
         }
 
         return $suggestions;

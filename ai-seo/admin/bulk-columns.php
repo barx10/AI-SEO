@@ -29,8 +29,8 @@ class AI_SEO_Bulk_Columns {
             $new[ $key ] = $label;
             // Insert SEO columns after the title column.
             if ( $key === 'title' ) {
-                $new['ai_seo_title']       = ai_seo_t( 'SEO-tittel', 'SEO Title' );
-                $new['ai_seo_description'] = ai_seo_t( 'Metabeskrivelse', 'Meta Description' );
+                $new['ai_seo_title']       = 'SEO-tittel';
+                $new['ai_seo_description'] = 'Metabeskrivelse';
                 $new['ai_seo_score']       = 'SEO';
             }
         }
@@ -47,12 +47,11 @@ class AI_SEO_Bulk_Columns {
                 $value = get_post_meta( $post_id, '_ai_seo_meta_title', true );
                 $display = $value ? mb_substr( $value, 0, 40 ) . ( mb_strlen( $value ) > 40 ? '…' : '' ) : '—';
                 printf(
-                    '<div class="ai-seo-inline-edit" data-post-id="%d" data-field="meta_title" data-max="70" title="%s">'
+                    '<div class="ai-seo-inline-edit" data-post-id="%d" data-field="meta_title" data-max="70" title="Klikk for å redigere">'
                     . '<span class="ai-seo-inline-value %s">%s</span>'
                     . '<input type="text" class="ai-seo-inline-input" value="%s" maxlength="70" style="display:none;" />'
                     . '</div>',
                     esc_attr( $post_id ),
-                    esc_attr( ai_seo_t( 'Klikk for å redigere', 'Click to edit' ) ),
                     $value ? '' : 'ai-seo-inline-empty',
                     esc_html( $display ),
                     esc_attr( $value )
@@ -62,12 +61,11 @@ class AI_SEO_Bulk_Columns {
             case 'ai_seo_description':
                 $value = get_post_meta( $post_id, '_ai_seo_meta_description', true );
                 printf(
-                    '<div class="ai-seo-inline-edit" data-post-id="%d" data-field="meta_description" data-max="160" title="%s">'
+                    '<div class="ai-seo-inline-edit" data-post-id="%d" data-field="meta_description" data-max="160" title="Klikk for å redigere">'
                     . '<span class="ai-seo-inline-value %s">%s</span>'
                     . '<input type="text" class="ai-seo-inline-input" value="%s" maxlength="160" style="display:none;" />'
                     . '</div>',
                     esc_attr( $post_id ),
-                    esc_attr( ai_seo_t( 'Klikk for å redigere', 'Click to edit' ) ),
                     $value ? '' : 'ai-seo-inline-empty',
                     esc_html( $value ? mb_substr( $value, 0, 60 ) . ( mb_strlen( $value ) > 60 ? '...' : '' ) : '—' ),
                     esc_attr( $value )
@@ -98,7 +96,7 @@ class AI_SEO_Bulk_Columns {
         check_ajax_referer( 'ai_seo_nonce', 'nonce' );
 
         if ( ! current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( ai_seo_t( 'Ingen tilgang.', 'Access denied.' ) );
+            wp_send_json_error( 'Ingen tilgang.' );
         }
 
         $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
@@ -106,7 +104,7 @@ class AI_SEO_Bulk_Columns {
         $value   = isset( $_POST['value'] ) ? sanitize_text_field( wp_unslash( $_POST['value'] ) ) : '';
 
         if ( ! $post_id || ! current_user_can( 'edit_post', $post_id ) ) {
-            wp_send_json_error( ai_seo_t( 'Ingen tilgang til dette innlegget.', 'No access to this post.' ) );
+            wp_send_json_error( 'Ingen tilgang til dette innlegget.' );
         }
 
         $allowed_fields = array(
@@ -115,7 +113,7 @@ class AI_SEO_Bulk_Columns {
         );
 
         if ( ! isset( $allowed_fields[ $field ] ) ) {
-            wp_send_json_error( ai_seo_t( 'Ugyldig felt.', 'Invalid field.' ) );
+            wp_send_json_error( 'Ugyldig felt.' );
         }
 
         update_post_meta( $post_id, $allowed_fields[ $field ], $value );

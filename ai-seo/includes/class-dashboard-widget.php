@@ -16,7 +16,7 @@ class AI_SEO_Dashboard_Widget {
 
         wp_add_dashboard_widget(
             'ai_seo_dashboard_widget',
-            ai_seo_t( 'AI SEO – Oversikt', 'AI SEO – Overview' ),
+            'AI SEO – Oversikt',
             array( $this, 'render_widget' )
         );
     }
@@ -28,32 +28,32 @@ class AI_SEO_Dashboard_Widget {
             <div class="ai-seo-dash-grid">
                 <div class="ai-seo-dash-card">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['total_posts'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Publiserte innlegg', 'Published Posts' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Publiserte innlegg</span>
                 </div>
                 <div class="ai-seo-dash-card ai-seo-dash-warning">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['missing_description'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Mangler metabeskrivelse', 'Missing Meta Description' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Mangler metabeskrivelse</span>
                 </div>
                 <div class="ai-seo-dash-card ai-seo-dash-warning">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['missing_title'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Mangler SEO-tittel', 'Missing SEO Title' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Mangler SEO-tittel</span>
                 </div>
                 <div class="ai-seo-dash-card ai-seo-dash-warning">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['missing_keyword'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Mangler fokus-søkeord', 'Missing Focus Keyword' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Mangler fokus-søkeord</span>
                 </div>
                 <div class="ai-seo-dash-card ai-seo-dash-warning">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['missing_image'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Mangler fremhevet bilde', 'Missing Featured Image' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Mangler fremhevet bilde</span>
                 </div>
                 <div class="ai-seo-dash-card">
                     <span class="ai-seo-dash-number"><?php echo esc_html( $stats['cornerstone_count'] ); ?></span>
-                    <span class="ai-seo-dash-label"><?php echo esc_html( ai_seo_t( 'Cornerstone-innlegg', 'Cornerstone Posts' ) ); ?></span>
+                    <span class="ai-seo-dash-label">Cornerstone-innlegg</span>
                 </div>
             </div>
 
             <?php if ( $stats['poor_readability_posts'] ) : ?>
-                <h4><?php echo esc_html( ai_seo_t( 'Innlegg med dårlig lesbarhet', 'Posts with Poor Readability' ) ); ?></h4>
+                <h4>Innlegg med dårlig lesbarhet</h4>
                 <ul class="ai-seo-dash-list">
                     <?php foreach ( $stats['poor_readability_posts'] as $p ) : ?>
                         <li>
@@ -65,7 +65,7 @@ class AI_SEO_Dashboard_Widget {
                     <?php endforeach; ?>
                 </ul>
             <?php else : ?>
-                <p class="ai-seo-dash-ok"><?php echo esc_html( ai_seo_t( 'Alle innlegg har akseptabel lesbarhet.', 'All posts have acceptable readability.' ) ); ?></p>
+                <p class="ai-seo-dash-ok">Alle innlegg har akseptabel lesbarhet.</p>
             <?php endif; ?>
 
             <?php
@@ -74,10 +74,10 @@ class AI_SEO_Dashboard_Widget {
             $has_key   = ! empty( $options['api_key'] );
             $providers = array( 'anthropic' => 'Claude', 'openai' => 'OpenAI', 'google' => 'Gemini' );
             ?>
-            <h4><?php echo esc_html( ai_seo_t( 'AI-status', 'AI Status' ) ); ?></h4>
+            <h4>AI-status</h4>
             <p>
-                <?php echo esc_html( ai_seo_t( 'Leverandør:', 'Provider:' ) ); ?> <strong><?php echo esc_html( $providers[ $provider ] ?? $provider ); ?></strong><br>
-                <?php echo esc_html( ai_seo_t( 'API-nøkkel:', 'API Key:' ) ); ?> <?php echo $has_key ? '<span style="color:#00a32a;">' . esc_html( ai_seo_t( 'Konfigurert', 'Configured' ) ) . '</span>' : '<span style="color:#d63638;">' . esc_html( ai_seo_t( 'Ikke satt', 'Not set' ) ) . '</span>'; ?>
+                Leverandør: <strong><?php echo esc_html( $providers[ $provider ] ?? $provider ); ?></strong><br>
+                API-nøkkel: <?php echo $has_key ? '<span style="color:#00a32a;">Konfigurert</span>' : '<span style="color:#d63638;">Ikke satt</span>'; ?>
             </p>
         </div>
         <?php
