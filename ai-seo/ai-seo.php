@@ -392,6 +392,38 @@ function ai_seo_ajax_refresh_score() {
 add_action( 'wp_ajax_ai_seo_refresh_score', 'ai_seo_ajax_refresh_score' );
 
 /**
+ * AJAX handler: Readability highlight.
+ */
+function ai_seo_ajax_readability_highlight() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    // Use current editor content if available, otherwise saved content.
+    $content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    if ( empty( $content ) ) {
+        $post = get_post( $post_id );
+        if ( ! $post ) {
+            wp_send_json_error( 'Innlegget ble ikke funnet.' );
+        }
+        $content = $post->post_content;
+    }
+
+    $readability = new AI_SEO_Readability();
+    $highlighted = $readability->highlight( $content );
+
+    wp_send_json_success( array( 'html' => $highlighted ) );
+}
+add_action( 'wp_ajax_ai_seo_readability_highlight', 'ai_seo_ajax_readability_highlight' );
+
+/**
  * Flush rewrite rules and create DB tables on activation.
  */
 function ai_seo_activate() {

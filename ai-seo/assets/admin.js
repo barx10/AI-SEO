@@ -419,6 +419,64 @@
             btnRefreshScore.addEventListener('click', refreshSeoScore);
         }
 
+        // --- Readability highlight ---
+        var btnHighlight    = document.getElementById('ai-seo-highlight-readability');
+        var highlightPanel  = document.getElementById('ai-seo-highlight-panel');
+        var highlightContent = document.getElementById('ai-seo-highlight-content');
+
+        if (btnHighlight) {
+            btnHighlight.addEventListener('click', function () {
+                var postId = this.dataset.postId;
+
+                // Get current editor content.
+                var editorContent = '';
+                try {
+                    if (typeof wp !== 'undefined' && wp.data && wp.data.select('core/editor')) {
+                        editorContent = wp.data.select('core/editor').getEditedPostContent() || '';
+                    }
+                } catch (e) {}
+                if (!editorContent) {
+                    if (typeof tinymce !== 'undefined' && tinymce.activeEditor && !tinymce.activeEditor.isHidden()) {
+                        editorContent = tinymce.activeEditor.getContent();
+                    } else {
+                        var contentArea = document.getElementById('content');
+                        if (contentArea) editorContent = contentArea.value;
+                    }
+                }
+
+                btnHighlight.disabled = true;
+                btnHighlight.textContent = 'Analyserer\u2026';
+
+                var formData = new FormData();
+                formData.append('action', 'ai_seo_readability_highlight');
+                formData.append('nonce', aiSeo.nonce);
+                formData.append('post_id', postId);
+                formData.append('post_content', editorContent);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', aiSeo.ajaxUrl, true);
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState !== 4) return;
+
+                    btnHighlight.disabled = false;
+                    btnHighlight.textContent = 'Vis i teksten';
+
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success && response.data && highlightContent && highlightPanel) {
+                                highlightContent.innerHTML = response.data.html;
+                                highlightPanel.style.display = 'block';
+                            }
+                        } catch (e) {}
+                    }
+                };
+
+                xhr.send(formData);
+            });
+        }
+
         // --- Copy cornerstone URL to clipboard ---
         var copyLinks = document.querySelectorAll('.ai-seo-copy-url');
         copyLinks.forEach(function (el) {
