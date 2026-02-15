@@ -13,8 +13,8 @@ class AI_SEO_Redirects_Page {
     public function add_menu_page() {
         add_submenu_page(
             'ai-seo',
-            ai_seo_t( 'AI SEO – Omdirigeringer', 'AI SEO – Redirects' ),
-            ai_seo_t( 'Omdirigeringer', 'Redirects' ),
+            'AI SEO – Omdirigeringer',
+            'Omdirigeringer',
             'manage_options',
             'ai-seo-redirects',
             array( $this, 'render_page' )
@@ -46,10 +46,10 @@ class AI_SEO_Redirects_Page {
                 if ( is_wp_error( $result ) ) {
                     add_settings_error( 'ai_seo_redirects', 'duplicate', $result->get_error_message(), 'error' );
                 } else {
-                    add_settings_error( 'ai_seo_redirects', 'added', ai_seo_t( 'Omdirigering lagt til.', 'Redirect added.' ), 'success' );
+                    add_settings_error( 'ai_seo_redirects', 'added', 'Omdirigering lagt til.', 'success' );
                 }
             } else {
-                add_settings_error( 'ai_seo_redirects', 'missing', ai_seo_t( 'Begge URL-feltene er påkrevde.', 'Both URL fields are required.' ), 'error' );
+                add_settings_error( 'ai_seo_redirects', 'missing', 'Begge URL-feltene er påkrevde.', 'error' );
             }
         }
 
@@ -74,44 +74,44 @@ class AI_SEO_Redirects_Page {
         $pages     = ceil( $total / $per_page );
 
         if ( isset( $_GET['deleted'] ) ) {
-            add_settings_error( 'ai_seo_redirects', 'deleted', ai_seo_t( 'Omdirigering slettet.', 'Redirect deleted.' ), 'success' );
+            add_settings_error( 'ai_seo_redirects', 'deleted', 'Omdirigering slettet.', 'success' );
         }
         ?>
         <div class="wrap">
-            <h1><?php echo esc_html( ai_seo_t( 'Omdirigeringer', 'Redirects' ) ); ?></h1>
+            <h1>Omdirigeringer</h1>
 
             <?php settings_errors( 'ai_seo_redirects' ); ?>
 
             <div class="ai-seo-redirect-form">
-                <h2><?php echo esc_html( ai_seo_t( 'Legg til omdirigering', 'Add Redirect' ) ); ?></h2>
+                <h2>Legg til omdirigering</h2>
                 <form method="post">
                     <?php wp_nonce_field( 'ai_seo_redirect_add' ); ?>
                     <table class="form-table">
                         <tr>
-                            <th><label for="source_url"><?php echo esc_html( ai_seo_t( 'Kilde-URL (sti)', 'Source URL (path)' ) ); ?></label></th>
+                            <th><label for="source_url">Kilde-URL (sti)</label></th>
                             <td>
                                 <input type="text" name="source_url" id="source_url" class="regular-text" placeholder="/gammel-side" required />
-                                <p class="description"><?php echo esc_html( ai_seo_t( 'Relativ sti, f.eks.', 'Relative path, e.g.' ) ); ?> <code>/gammel-side</code></p>
+                                <p class="description">Relativ sti, f.eks. <code>/gammel-side</code></p>
                             </td>
                         </tr>
                         <tr>
-                            <th><label for="target_url"><?php echo esc_html( ai_seo_t( 'Mål-URL', 'Target URL' ) ); ?></label></th>
+                            <th><label for="target_url">Mål-URL</label></th>
                             <td>
                                 <input type="url" name="target_url" id="target_url" class="regular-text" placeholder="https://example.com/ny-side" required />
-                                <p class="description"><?php echo esc_html( ai_seo_t( 'Full URL eller relativ sti til det nye målet.', 'Full URL or relative path to the new target.' ) ); ?></p>
+                                <p class="description">Full URL eller relativ sti til det nye målet.</p>
                             </td>
                         </tr>
                         <tr>
                             <th><label for="redirect_type">Type</label></th>
                             <td>
                                 <select name="redirect_type" id="redirect_type">
-                                    <option value="301"><?php echo esc_html( ai_seo_t( '301 – Permanent', '301 – Permanent' ) ); ?></option>
-                                    <option value="302"><?php echo esc_html( ai_seo_t( '302 – Midlertidig', '302 – Temporary' ) ); ?></option>
+                                    <option value="301">301 – Permanent</option>
+                                    <option value="302">302 – Midlertidig</option>
                                 </select>
                             </td>
                         </tr>
                     </table>
-                    <?php submit_button( ai_seo_t( 'Legg til omdirigering', 'Add Redirect' ), 'primary', 'ai_seo_add_redirect' ); ?>
+                    <?php submit_button( 'Legg til omdirigering', 'primary', 'ai_seo_add_redirect' ); ?>
                 </form>
             </div>
 
@@ -123,42 +123,42 @@ class AI_SEO_Redirects_Page {
                 $chains = array_filter( $chain_issues, function( $i ) { return $i['type'] === 'chain'; } );
             ?>
                 <div class="ai-seo-chain-warnings">
-                    <h2><?php echo esc_html( ai_seo_t( 'Advarsler', 'Warnings' ) ); ?></h2>
+                    <h2>Advarsler</h2>
                     <?php if ( ! empty( $loops ) ) : ?>
                         <?php foreach ( $loops as $issue ) : ?>
                             <div class="ai-seo-chain-warning ai-seo-chain-loop">
-                                <strong><?php echo esc_html( ai_seo_t( 'Omdirigeringsloop oppdaget:', 'Redirect loop detected:' ) ); ?></strong>
+                                <strong>Omdirigeringsloop oppdaget:</strong>
                                 <code><?php echo esc_html( implode( ' &rarr; ', $issue['path'] ) ); ?></code>
-                                <br><span class="description"><?php echo esc_html( ai_seo_t( 'Denne loopen vil aldri nå et endelig mål. Fjern eller rett opp en av omdirigeringene.', 'This loop will never reach a final target. Remove or fix one of the redirects.' ) ); ?></span>
+                                <br><span class="description">Denne loopen vil aldri nå et endelig mål. Fjern eller rett opp en av omdirigeringene.</span>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                     <?php if ( ! empty( $chains ) ) : ?>
                         <?php foreach ( $chains as $issue ) : ?>
                             <div class="ai-seo-chain-warning ai-seo-chain-chain">
-                                <strong><?php echo esc_html( ai_seo_t( 'Omdirigeringskjede', 'Redirect chain' ) ); ?> (<?php echo count( $issue['path'] ); ?> <?php echo esc_html( ai_seo_t( 'hopp', 'hops' ) ); ?>):</strong>
+                                <strong>Omdirigeringskjede (<?php echo count( $issue['path'] ); ?> hopp):</strong>
                                 <code><?php echo esc_html( implode( ' &rarr; ', $issue['path'] ) ); ?></code>
-                                <br><span class="description"><?php echo esc_html( ai_seo_t( 'Flere hopp forsinker brukeren og reduserer lenke-juice. Vurder å peke den første omdirigeringen direkte til det endelige målet.', 'Multiple hops slow down the user and reduce link juice. Consider pointing the first redirect directly to the final target.' ) ); ?></span>
+                                <br><span class="description">Flere hopp forsinker brukeren og reduserer lenke-juice. Vurder å peke den første omdirigeringen direkte til det endelige målet.</span>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
 
-            <h2><?php echo esc_html( ai_seo_t( 'Eksisterende omdirigeringer', 'Existing Redirects' ) ); ?> (<?php echo esc_html( $total ); ?>)</h2>
+            <h2>Eksisterende omdirigeringer (<?php echo esc_html( $total ); ?>)</h2>
 
             <?php if ( empty( $redirects ) ) : ?>
-                <p><?php echo esc_html( ai_seo_t( 'Ingen omdirigeringer er lagt til ennå.', 'No redirects have been added yet.' ) ); ?></p>
+                <p>Ingen omdirigeringer er lagt til ennå.</p>
             <?php else : ?>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo esc_html( ai_seo_t( 'Kilde-URL', 'Source URL' ) ); ?></th>
-                            <th><?php echo esc_html( ai_seo_t( 'Mål-URL', 'Target URL' ) ); ?></th>
+                            <th>Kilde-URL</th>
+                            <th>Mål-URL</th>
                             <th>Type</th>
-                            <th><?php echo esc_html( ai_seo_t( 'Treff', 'Hits' ) ); ?></th>
-                            <th><?php echo esc_html( ai_seo_t( 'Opprettet', 'Created' ) ); ?></th>
-                            <th><?php echo esc_html( ai_seo_t( 'Handling', 'Action' ) ); ?></th>
+                            <th>Treff</th>
+                            <th>Opprettet</th>
+                            <th>Handling</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -173,7 +173,7 @@ class AI_SEO_Redirects_Page {
                                     <a href="<?php echo esc_url( wp_nonce_url(
                                         admin_url( 'admin.php?page=ai-seo-redirects&action=delete&redirect_id=' . $r->id ),
                                         'ai_seo_redirect_delete_' . $r->id
-                                    ) ); ?>" class="ai-seo-delete-link" onclick="return confirm('<?php echo esc_js( ai_seo_t( 'Er du sikker på at du vil slette denne omdirigeringen?', 'Are you sure you want to delete this redirect?' ) ); ?>');"><?php echo esc_html( ai_seo_t( 'Slett', 'Delete' ) ); ?></a>
+                                    ) ); ?>" class="ai-seo-delete-link" onclick="return confirm('Er du sikker på at du vil slette denne omdirigeringen?');">Slett</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
