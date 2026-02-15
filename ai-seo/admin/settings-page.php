@@ -85,8 +85,11 @@ class AI_SEO_Settings_Page {
 
         $allowed_models = array(
             'claude-sonnet-4-5-20250929',
+            'gpt-5-mini',
+            'gpt-4.1-mini',
             'gpt-4o',
             'gemini-3-flash-preview',
+            'gemini-2.5-flash',
         );
         $sanitized['ai_model'] = isset( $input['ai_model'] ) && in_array( $input['ai_model'], $allowed_models, true )
             ? $input['ai_model']
@@ -302,10 +305,13 @@ class AI_SEO_Settings_Page {
                 <option value="claude-sonnet-4-5-20250929" <?php selected( $model, 'claude-sonnet-4-5-20250929' ); ?>>Claude Sonnet 4.5</option>
             </optgroup>
             <optgroup label="OpenAI" class="ai-seo-model-group" data-provider="openai">
+                <option value="gpt-5-mini" <?php selected( $model, 'gpt-5-mini' ); ?>>GPT-5 Mini</option>
+                <option value="gpt-4.1-mini" <?php selected( $model, 'gpt-4.1-mini' ); ?>>GPT-4.1 Mini</option>
                 <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>GPT-4o</option>
             </optgroup>
             <optgroup label="Google" class="ai-seo-model-group" data-provider="google">
                 <option value="gemini-3-flash-preview" <?php selected( $model, 'gemini-3-flash-preview' ); ?>>Gemini 3 Flash Preview</option>
+                <option value="gemini-2.5-flash" <?php selected( $model, 'gemini-2.5-flash' ); ?>>Gemini 2.5 Flash</option>
             </optgroup>
         </select>
         <p class="description">Velg modellen som skal brukes for AI-generering.</p>
