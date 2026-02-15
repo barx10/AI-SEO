@@ -19,7 +19,7 @@ class AI_SEO_Breadcrumbs {
         $trail = array();
 
         $trail[] = array(
-            'name' => 'Hjem',
+            'name' => ai_seo_t( 'Hjem', 'Home' ),
             'url'  => home_url( '/' ),
         );
 
@@ -118,13 +118,13 @@ class AI_SEO_Breadcrumbs {
 
         } elseif ( is_search() ) {
             $trail[] = array(
-                'name' => 'Søkeresultater for: ' . get_search_query(),
+                'name' => ai_seo_t( 'Søkeresultater for: ', 'Search results for: ' ) . get_search_query(),
                 'url'  => get_search_link(),
             );
 
         } elseif ( is_404() ) {
             $trail[] = array(
-                'name' => '404 – Ikke funnet',
+                'name' => ai_seo_t( '404 – Ikke funnet', '404 – Not Found' ),
                 'url'  => '',
             );
         }
@@ -142,7 +142,7 @@ class AI_SEO_Breadcrumbs {
             return '';
         }
 
-        $html = '<nav class="ai-seo-breadcrumbs" aria-label="Brødsmuler">';
+        $html = '<nav class="ai-seo-breadcrumbs" aria-label="' . esc_attr( ai_seo_t( 'Brødsmuler', 'Breadcrumbs' ) ) . '">';
         $html .= '<ol class="ai-seo-breadcrumb-list">';
 
         $last_index = count( $trail ) - 1;
