@@ -99,19 +99,23 @@ class AI_SEO_Meta_Box {
                 <div class="ai-seo-checkbox-group">
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="noindex" <?php checked( in_array( 'noindex', $robots_meta, true ) ); ?> />
-                        noindex <span class="description">(ikke indekser denne siden)</span>
+                        noindex
+                        <span class="ai-seo-tooltip" data-tip="Siden vil ikke dukke opp i Google-s&oslash;k. Bruk dette p&aring; sider som ikke trenger organisk trafikk, f.eks. takkesider eller interne landingssider.">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="nofollow" <?php checked( in_array( 'nofollow', $robots_meta, true ) ); ?> />
-                        nofollow <span class="description">(ikke følg lenker)</span>
+                        nofollow
+                        <span class="ai-seo-tooltip" data-tip="S&oslash;kemotorer vil ikke f&oslash;lge lenker p&aring; denne siden. Lenke-juice overf&oslash;res ikke til sidene du lenker til herfra.">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="noarchive" <?php checked( in_array( 'noarchive', $robots_meta, true ) ); ?> />
-                        noarchive <span class="description">(ikke vis hurtigbuffer)</span>
+                        noarchive
+                        <span class="ai-seo-tooltip" data-tip="Google vil ikke vise &laquo;Hurtigbufret&raquo;-lenken i s&oslash;keresultatet. Nyttig for innhold som endres ofte.">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="nosnippet" <?php checked( in_array( 'nosnippet', $robots_meta, true ) ); ?> />
-                        nosnippet <span class="description">(ikke vis tekstutdrag)</span>
+                        nosnippet
+                        <span class="ai-seo-tooltip" data-tip="Ingen tekstutdrag vises under tittelen i s&oslash;keresultatet. Siden f&aring;r kun tittel og URL &mdash; kan redusere klikkrate betraktelig.">?</span>
                     </label>
                 </div>
             </div>
@@ -229,6 +233,16 @@ class AI_SEO_Meta_Box {
                             </ul>
                         </div>
                     <?php endif; ?>
+                    <button type="button" class="button button-small" id="ai-seo-highlight-readability" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-top:10px;">
+                        Vis i teksten
+                    </button>
+                    <div class="ai-seo-highlight-panel" id="ai-seo-highlight-panel" style="display:none;">
+                        <div class="ai-seo-highlight-legend">
+                            <span class="ai-seo-hl-long">Lang setning (&gt;25 ord)</span>
+                            <span class="ai-seo-hl-passive">Passiv stemme</span>
+                        </div>
+                        <div class="ai-seo-highlight-content" id="ai-seo-highlight-content"></div>
+                    </div>
                 <?php else : ?>
                     <p class="description">Legg til innhold for å se lesbarhetsanalyse.</p>
                 <?php endif; ?>

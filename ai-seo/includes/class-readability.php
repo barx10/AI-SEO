@@ -304,6 +304,87 @@ class AI_SEO_Readability {
         return 'Dårlig lesbarhet';
     }
 
+    /**
+     * Return HTML with sentences highlighted by readability issue.
+     *
+     * @param  string $html Post content (may contain HTML).
+     * @return string Annotated HTML.
+     */
+    public function highlight( $html ) {
+        // Strip tags but keep paragraph breaks for display.
+        $text = wp_strip_all_tags( $html );
+        $text = trim( $text );
+
+        if ( empty( $text ) ) {
+            return '';
+        }
+
+        // Split into sentences while keeping delimiters.
+        $parts = preg_split( '/([.!?]+[\s]+|[.!?]+$)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+
+        $output    = '';
+        $sentence  = '';
+
+        foreach ( $parts as $part ) {
+            // Delimiters (punctuation + space) — append to current sentence then flush.
+            if ( preg_match( '/^[.!?]+[\s]*$/u', $part ) ) {
+                $sentence .= $part;
+                $output   .= $this->wrap_sentence( $sentence );
+                $sentence  = '';
+            } else {
+                $sentence = $part;
+            }
+        }
+
+        // Flush remaining.
+        if ( $sentence !== '' ) {
+            $output .= $this->wrap_sentence( $sentence );
+        }
+
+        return $output;
+    }
+
+    /**
+     * Wrap a single sentence in a <span> if it has readability issues.
+     */
+    private function wrap_sentence( $sentence ) {
+        $trimmed = trim( $sentence );
+        if ( $trimmed === '' ) {
+            return $sentence;
+        }
+
+        $classes = array();
+        $tips    = array();
+
+        // Long sentence check (>25 words).
+        $words = $this->extract_words( $trimmed );
+        $wc    = count( $words );
+        if ( $wc > 25 ) {
+            $classes[] = 'ai-seo-hl-long';
+            $tips[]    = $wc . ' ord – forsøk å dele opp';
+        }
+
+        // Passive voice check.
+        $lower = mb_strtolower( $trimmed );
+        foreach ( self::$passive_markers as $marker ) {
+            if ( mb_strpos( $lower, $marker ) !== false ) {
+                if ( preg_match( '/\b(' . implode( '|', self::$passive_markers ) . ')\s+\w+(t|et|dd)\b/u', $lower ) ) {
+                    $classes[] = 'ai-seo-hl-passive';
+                    $tips[]    = 'passiv stemme';
+                    break;
+                }
+            }
+        }
+
+        if ( empty( $classes ) ) {
+            return esc_html( $sentence );
+        }
+
+        return '<span class="' . implode( ' ', $classes ) . '" data-tip="' . esc_attr( implode( ' | ', $tips ) ) . '">'
+            . esc_html( $sentence )
+            . '</span>';
+    }
+
     private function build_suggestions( $avg_sentence, $passive_pct, $transition_pct, $long_pct, $long_paras, $flesch, $word_count ) {
         $suggestions = array();
 
