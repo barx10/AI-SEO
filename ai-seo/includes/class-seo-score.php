@@ -27,9 +27,9 @@ class AI_SEO_Score {
         $title_len = mb_strlen( $title );
         $checks[] = array(
             'id'     => 'title_length',
-            'label'  => 'SEO-tittel har god lengde (30–60 tegn)',
+            'label'  => ai_seo_t( 'SEO-tittel har god lengde (30–60 tegn)', 'SEO title has good length (30–60 characters)' ),
             'pass'   => $title_len >= 30 && $title_len <= 60,
-            'detail' => sprintf( '%d tegn', $title_len ),
+            'detail' => sprintf( '%d %s', $title_len, ai_seo_t( 'tegn', 'chars' ) ),
             'weight' => 10,
         );
 
@@ -37,18 +37,18 @@ class AI_SEO_Score {
         $desc_len = mb_strlen( $description );
         $checks[] = array(
             'id'     => 'description_set',
-            'label'  => 'Metabeskrivelse er satt (120–160 tegn)',
+            'label'  => ai_seo_t( 'Metabeskrivelse er satt (120–160 tegn)', 'Meta description is set (120–160 characters)' ),
             'pass'   => $desc_len >= 120 && $desc_len <= 160,
-            'detail' => $desc_len > 0 ? sprintf( '%d tegn', $desc_len ) : 'Ikke satt',
+            'detail' => $desc_len > 0 ? sprintf( '%d %s', $desc_len, ai_seo_t( 'tegn', 'chars' ) ) : ai_seo_t( 'Ikke satt', 'Not set' ),
             'weight' => 10,
         );
 
         // 3. Content length.
         $checks[] = array(
             'id'     => 'content_length',
-            'label'  => 'Innholdet har tilstrekkelig lengde (300+ ord)',
+            'label'  => ai_seo_t( 'Innholdet har tilstrekkelig lengde (300+ ord)', 'Content has sufficient length (300+ words)' ),
             'pass'   => $word_count >= 300,
-            'detail' => sprintf( '%d ord', $word_count ),
+            'detail' => sprintf( '%d %s', $word_count, ai_seo_t( 'ord', 'words' ) ),
             'weight' => 10,
         );
 
@@ -56,9 +56,9 @@ class AI_SEO_Score {
         $has_keyword = ! empty( $keyword );
         $checks[] = array(
             'id'     => 'keyword_set',
-            'label'  => 'Fokus-søkeord er definert',
+            'label'  => ai_seo_t( 'Fokus-søkeord er definert', 'Focus keyword is defined' ),
             'pass'   => $has_keyword,
-            'detail' => $has_keyword ? $keyword : 'Ikke satt',
+            'detail' => $has_keyword ? $keyword : ai_seo_t( 'Ikke satt', 'Not set' ),
             'weight' => 5,
         );
 
@@ -69,7 +69,7 @@ class AI_SEO_Score {
             $keyword_normalized = self::normalize_for_comparison( $keyword );
             $checks[] = array(
                 'id'     => 'keyword_in_title',
-                'label'  => 'Fokus-søkeord finnes i tittelen',
+                'label'  => ai_seo_t( 'Fokus-søkeord finnes i tittelen', 'Focus keyword found in the title' ),
                 'pass'   => mb_stripos( $title, $keyword ) !== false || mb_stripos( $title_normalized, $keyword_normalized ) !== false,
                 'detail' => '',
                 'weight' => 10,
@@ -78,7 +78,7 @@ class AI_SEO_Score {
             // 6. Keyword in description.
             $checks[] = array(
                 'id'     => 'keyword_in_desc',
-                'label'  => 'Fokus-søkeord finnes i metabeskrivelsen',
+                'label'  => ai_seo_t( 'Fokus-søkeord finnes i metabeskrivelsen', 'Focus keyword found in the meta description' ),
                 'pass'   => ! empty( $description ) && ( mb_stripos( $description, $keyword ) !== false || mb_stripos( self::normalize_for_comparison( $description ), $keyword_normalized ) !== false ),
                 'detail' => '',
                 'weight' => 10,
@@ -88,7 +88,7 @@ class AI_SEO_Score {
             $first_para = self::get_first_paragraph( $content );
             $checks[] = array(
                 'id'     => 'keyword_in_intro',
-                'label'  => 'Fokus-søkeord finnes i første avsnitt',
+                'label'  => ai_seo_t( 'Fokus-søkeord finnes i første avsnitt', 'Focus keyword found in the first paragraph' ),
                 'pass'   => mb_stripos( $first_para, $keyword ) !== false || mb_stripos( self::normalize_for_comparison( $first_para ), $keyword_normalized ) !== false,
                 'detail' => '',
                 'weight' => 10,
@@ -105,9 +105,9 @@ class AI_SEO_Score {
             }
             $checks[] = array(
                 'id'     => 'keyword_in_heading',
-                'label'  => 'Fokus-søkeord finnes i en overskrift (H2–H6)',
+                'label'  => ai_seo_t( 'Fokus-søkeord finnes i en overskrift (H2–H6)', 'Focus keyword found in a heading (H2–H6)' ),
                 'pass'   => $keyword_in_heading,
-                'detail' => count( $headings ) . ' overskrifter funnet',
+                'detail' => count( $headings ) . ' ' . ai_seo_t( 'overskrifter funnet', 'headings found' ),
                 'weight' => 5,
             );
 
@@ -115,7 +115,7 @@ class AI_SEO_Score {
             $density = self::keyword_density( $plain, $keyword );
             $checks[] = array(
                 'id'     => 'keyword_density',
-                'label'  => 'Søkeordtetthet er i anbefalt område (1–3 %)',
+                'label'  => ai_seo_t( 'Søkeordtetthet er i anbefalt område (1–3 %)', 'Keyword density is in recommended range (1–3%)' ),
                 'pass'   => $density >= 1.0 && $density <= 3.0,
                 'detail' => sprintf( '%.1f %%', $density ),
                 'weight' => 5,
@@ -126,7 +126,7 @@ class AI_SEO_Score {
         $image_check = self::check_images( $content );
         $checks[] = array(
             'id'     => 'images_alt',
-            'label'  => 'Alle bilder har alt-tekst',
+            'label'  => ai_seo_t( 'Alle bilder har alt-tekst', 'All images have alt text' ),
             'pass'   => $image_check['pass'],
             'detail' => $image_check['detail'],
             'weight' => 5,
@@ -136,9 +136,9 @@ class AI_SEO_Score {
         $internal_count = self::count_internal_links( $content );
         $checks[] = array(
             'id'     => 'internal_links',
-            'label'  => 'Innholdet har interne lenker',
+            'label'  => ai_seo_t( 'Innholdet har interne lenker', 'Content has internal links' ),
             'pass'   => $internal_count >= 1,
-            'detail' => sprintf( '%d interne lenker', $internal_count ),
+            'detail' => sprintf( '%d %s', $internal_count, ai_seo_t( 'interne lenker', 'internal links' ) ),
             'weight' => 5,
         );
 
@@ -146,9 +146,9 @@ class AI_SEO_Score {
         $external_count = self::count_external_links( $content );
         $checks[] = array(
             'id'     => 'external_links',
-            'label'  => 'Innholdet har eksterne lenker',
+            'label'  => ai_seo_t( 'Innholdet har eksterne lenker', 'Content has external links' ),
             'pass'   => $external_count >= 1,
-            'detail' => sprintf( '%d eksterne lenker', $external_count ),
+            'detail' => sprintf( '%d %s', $external_count, ai_seo_t( 'eksterne lenker', 'external links' ) ),
             'weight' => 5,
         );
 
@@ -156,7 +156,7 @@ class AI_SEO_Score {
         $has_h2 = (bool) preg_match( '/<h2[\s>]/i', $content );
         $checks[] = array(
             'id'     => 'has_subheadings',
-            'label'  => 'Innholdet bruker underoverskrifter (H2)',
+            'label'  => ai_seo_t( 'Innholdet bruker underoverskrifter (H2)', 'Content uses subheadings (H2)' ),
             'pass'   => $has_h2,
             'detail' => '',
             'weight' => 5,
@@ -166,7 +166,7 @@ class AI_SEO_Score {
         $has_thumb = has_post_thumbnail( $post->ID );
         $checks[] = array(
             'id'     => 'featured_image',
-            'label'  => 'Fremhevet bilde er satt',
+            'label'  => ai_seo_t( 'Fremhevet bilde er satt', 'Featured image is set' ),
             'pass'   => $has_thumb,
             'detail' => '',
             'weight' => 5,
@@ -234,7 +234,7 @@ class AI_SEO_Score {
 
     private static function check_images( $html ) {
         if ( ! preg_match_all( '/<img[^>]*>/i', $html, $matches ) ) {
-            return array( 'pass' => true, 'detail' => 'Ingen bilder i innholdet' );
+            return array( 'pass' => true, 'detail' => ai_seo_t( 'Ingen bilder i innholdet', 'No images in content' ) );
         }
 
         $total   = count( $matches[0] );
@@ -246,10 +246,10 @@ class AI_SEO_Score {
         }
 
         if ( $missing === 0 ) {
-            return array( 'pass' => true, 'detail' => sprintf( '%d bilder, alle med alt-tekst', $total ) );
+            return array( 'pass' => true, 'detail' => sprintf( '%d %s', $total, ai_seo_t( 'bilder, alle med alt-tekst', 'images, all with alt text' ) ) );
         }
 
-        return array( 'pass' => false, 'detail' => sprintf( '%d av %d bilder mangler alt-tekst', $missing, $total ) );
+        return array( 'pass' => false, 'detail' => sprintf( ai_seo_t( '%d av %d bilder mangler alt-tekst', '%d of %d images missing alt text' ), $missing, $total ) );
     }
 
     private static function count_internal_links( $html ) {

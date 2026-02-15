@@ -23,8 +23,8 @@ class AI_SEO_Settings_Page {
 
         add_submenu_page(
             'ai-seo',
-            'AI SEO Innstillinger',
-            'Innstillinger',
+            ai_seo_t( 'AI SEO Innstillinger', 'AI SEO Settings' ),
+            ai_seo_t( 'Innstillinger', 'Settings' ),
             'manage_options',
             'ai-seo',
             array( $this, 'render_page' )
@@ -37,38 +37,38 @@ class AI_SEO_Settings_Page {
         ) );
 
         // General section.
-        add_settings_section( 'ai_seo_general_section', 'Generelt', array( $this, 'render_general_section' ), 'ai-seo' );
+        add_settings_section( 'ai_seo_general_section', ai_seo_t( 'Generelt', 'General' ), array( $this, 'render_general_section' ), 'ai-seo' );
 
-        add_settings_field( 'content_language', 'Innholdsspråk', array( $this, 'render_language_field' ), 'ai-seo', 'ai_seo_general_section' );
+        add_settings_field( 'content_language', ai_seo_t( 'Innholdsspråk', 'Content Language' ), array( $this, 'render_language_field' ), 'ai-seo', 'ai_seo_general_section' );
 
         // API section.
-        add_settings_section( 'ai_seo_api_section', 'API-innstillinger', array( $this, 'render_api_section' ), 'ai-seo' );
+        add_settings_section( 'ai_seo_api_section', ai_seo_t( 'API-innstillinger', 'API Settings' ), array( $this, 'render_api_section' ), 'ai-seo' );
 
-        add_settings_field( 'ai_provider', 'AI-leverandør', array( $this, 'render_provider_field' ), 'ai-seo', 'ai_seo_api_section' );
-        add_settings_field( 'ai_model', 'Modell', array( $this, 'render_model_field' ), 'ai-seo', 'ai_seo_api_section' );
-        add_settings_field( 'api_key', 'API-nøkkel', array( $this, 'render_api_key_field' ), 'ai-seo', 'ai_seo_api_section' );
+        add_settings_field( 'ai_provider', ai_seo_t( 'AI-leverandør', 'AI Provider' ), array( $this, 'render_provider_field' ), 'ai-seo', 'ai_seo_api_section' );
+        add_settings_field( 'ai_model', ai_seo_t( 'Modell', 'Model' ), array( $this, 'render_model_field' ), 'ai-seo', 'ai_seo_api_section' );
+        add_settings_field( 'api_key', ai_seo_t( 'API-nøkkel', 'API Key' ), array( $this, 'render_api_key_field' ), 'ai-seo', 'ai_seo_api_section' );
 
         // Modules section.
-        add_settings_section( 'ai_seo_modules_section', 'Moduler', array( $this, 'render_modules_section' ), 'ai-seo' );
+        add_settings_section( 'ai_seo_modules_section', ai_seo_t( 'Moduler', 'Modules' ), array( $this, 'render_modules_section' ), 'ai-seo' );
 
         add_settings_field( 'enable_sitemap', 'XML-sitemap', array( $this, 'render_sitemap_field' ), 'ai-seo', 'ai_seo_modules_section' );
-        add_settings_field( 'enable_schema', 'Schema.org-markering', array( $this, 'render_schema_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_schema', ai_seo_t( 'Schema.org-markering', 'Schema.org Markup' ), array( $this, 'render_schema_field' ), 'ai-seo', 'ai_seo_modules_section' );
         add_settings_field( 'enable_opengraph', 'OpenGraph / Twitter Cards', array( $this, 'render_opengraph_field' ), 'ai-seo', 'ai_seo_modules_section' );
-        add_settings_field( 'enable_breadcrumbs', 'Brødsmulesti', array( $this, 'render_breadcrumbs_field' ), 'ai-seo', 'ai_seo_modules_section' );
-        add_settings_field( 'enable_redirects', 'Omdirigeringer', array( $this, 'render_redirects_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_breadcrumbs', ai_seo_t( 'Brødsmulesti', 'Breadcrumbs' ), array( $this, 'render_breadcrumbs_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_redirects', ai_seo_t( 'Omdirigeringer', 'Redirects' ), array( $this, 'render_redirects_field' ), 'ai-seo', 'ai_seo_modules_section' );
 
         // Social section.
-        add_settings_section( 'ai_seo_social_section', 'Sosiale medier', array( $this, 'render_social_section' ), 'ai-seo' );
+        add_settings_section( 'ai_seo_social_section', ai_seo_t( 'Sosiale medier', 'Social Media' ), array( $this, 'render_social_section' ), 'ai-seo' );
 
-        add_settings_field( 'twitter_handle', 'Twitter / X-brukernavn', array( $this, 'render_twitter_field' ), 'ai-seo', 'ai_seo_social_section' );
+        add_settings_field( 'twitter_handle', ai_seo_t( 'Twitter / X-brukernavn', 'Twitter / X Username' ), array( $this, 'render_twitter_field' ), 'ai-seo', 'ai_seo_social_section' );
 
         // Organization / LocalBusiness section.
-        add_settings_section( 'ai_seo_org_section', 'Organisasjon / Bedrift', array( $this, 'render_org_section' ), 'ai-seo' );
+        add_settings_section( 'ai_seo_org_section', ai_seo_t( 'Organisasjon / Bedrift', 'Organization / Business' ), array( $this, 'render_org_section' ), 'ai-seo' );
 
-        add_settings_field( 'schema_org_type', 'Organisasjonstype', array( $this, 'render_org_type_field' ), 'ai-seo', 'ai_seo_org_section' );
-        add_settings_field( 'schema_org_phone', 'Telefonnummer', array( $this, 'render_org_phone_field' ), 'ai-seo', 'ai_seo_org_section' );
-        add_settings_field( 'schema_org_email', 'E-post', array( $this, 'render_org_email_field' ), 'ai-seo', 'ai_seo_org_section' );
-        add_settings_field( 'schema_org_address', 'Adresse', array( $this, 'render_org_address_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_type', ai_seo_t( 'Organisasjonstype', 'Organization Type' ), array( $this, 'render_org_type_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_phone', ai_seo_t( 'Telefonnummer', 'Phone Number' ), array( $this, 'render_org_phone_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_email', ai_seo_t( 'E-post', 'Email' ), array( $this, 'render_org_email_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_org_address', ai_seo_t( 'Adresse', 'Address' ), array( $this, 'render_org_address_field' ), 'ai-seo', 'ai_seo_org_section' );
     }
 
     public function sanitize_options( $input ) {
@@ -253,7 +253,7 @@ class AI_SEO_Settings_Page {
     // --- Render callbacks ---
 
     public function render_general_section() {
-        echo '<p>Grunnleggende innstillinger for innholdsanalyse.</p>';
+        echo '<p>' . ai_seo_t( 'Grunnleggende innstillinger for innholdsanalyse.', 'Basic settings for content analysis.' ) . '</p>';
     }
 
     public function render_language_field() {
@@ -264,24 +264,24 @@ class AI_SEO_Settings_Page {
             <option value="nb" <?php selected( $lang, 'nb' ); ?>>Norsk</option>
             <option value="en" <?php selected( $lang, 'en' ); ?>>English</option>
         </select>
-        <p class="description">Velg språket innholdet ditt er skrevet på. Dette påvirker lesbarhetsanalysen (Flesch-Kincaid-koeffisient, passiv stemme, overgangsord).</p>
+        <p class="description"><?php echo ai_seo_t( 'Velg språket innholdet ditt er skrevet på. Dette påvirker lesbarhetsanalysen (Flesch-Kincaid-koeffisient, passiv stemme, overgangsord).', 'Choose the language your content is written in. This affects readability analysis (Flesch-Kincaid coefficient, passive voice, transition words).' ); ?></p>
         <?php
     }
 
     public function render_api_section() {
-        echo '<p>Konfigurer tilkoblingen til AI-tjenesten.</p>';
+        echo '<p>' . ai_seo_t( 'Konfigurer tilkoblingen til AI-tjenesten.', 'Configure the connection to the AI service.' ) . '</p>';
     }
 
     public function render_modules_section() {
-        echo '<p>Aktiver eller deaktiver individuelle SEO-moduler.</p>';
+        echo '<p>' . ai_seo_t( 'Aktiver eller deaktiver individuelle SEO-moduler.', 'Enable or disable individual SEO modules.' ) . '</p>';
     }
 
     public function render_social_section() {
-        echo '<p>Innstillinger for sosiale medier.</p>';
+        echo '<p>' . ai_seo_t( 'Innstillinger for sosiale medier.', 'Social media settings.' ) . '</p>';
     }
 
     public function render_org_section() {
-        echo '<p>Legg til organisasjons- eller bedriftsinformasjon for Schema.org-markering på forsiden.</p>';
+        echo '<p>' . ai_seo_t( 'Legg til organisasjons- eller bedriftsinformasjon for Schema.org-markering på forsiden.', 'Add organization or business information for Schema.org markup on the front page.' ) . '</p>';
     }
 
     public function render_provider_field() {
@@ -314,7 +314,7 @@ class AI_SEO_Settings_Page {
                 <option value="gemini-2.5-flash" <?php selected( $model, 'gemini-2.5-flash' ); ?>>Gemini 2.5 Flash</option>
             </optgroup>
         </select>
-        <p class="description">Velg modellen som skal brukes for AI-generering.</p>
+        <p class="description"><?php echo ai_seo_t( 'Velg modellen som skal brukes for AI-generering.', 'Choose the model to use for AI generation.' ); ?></p>
         <?php
     }
 
@@ -324,9 +324,12 @@ class AI_SEO_Settings_Page {
         $has_constant = defined( 'AI_SEO_API_KEY' ) && AI_SEO_API_KEY;
 
         if ( $has_constant ) : ?>
-            <input type="text" value="Definert via AI_SEO_API_KEY i wp-config.php" class="regular-text" disabled />
+            <input type="text" value="<?php echo esc_attr( ai_seo_t( 'Definert via AI_SEO_API_KEY i wp-config.php', 'Defined via AI_SEO_API_KEY in wp-config.php' ) ); ?>" class="regular-text" disabled />
             <p class="description" style="color: #00a32a;">
-                API-nøkkelen leses fra <code>wp-config.php</code>-konstanten <code>AI_SEO_API_KEY</code>. Dette er den sikreste metoden &mdash; nøkkelen lagres aldri i databasen.
+                <?php echo ai_seo_t(
+                    'API-nøkkelen leses fra <code>wp-config.php</code>-konstanten <code>AI_SEO_API_KEY</code>. Dette er den sikreste metoden &mdash; nøkkelen lagres aldri i databasen.',
+                    'The API key is read from the <code>wp-config.php</code> constant <code>AI_SEO_API_KEY</code>. This is the most secure method &mdash; the key is never stored in the database.'
+                ); ?>
             </p>
         <?php else : ?>
             <input type="password"
@@ -335,11 +338,11 @@ class AI_SEO_Settings_Page {
                    value="<?php echo esc_attr( $has_key ? wp_hash( '__ai_seo_salt__' ) : '' ); ?>"
                    class="regular-text"
                    autocomplete="off" />
-            <button type="button" class="button button-secondary" id="ai-seo-toggle-key">Vis/skjul</button>
+            <button type="button" class="button button-secondary" id="ai-seo-toggle-key"><?php echo ai_seo_t( 'Vis/skjul', 'Show/hide' ); ?></button>
             <?php if ( $has_key ) : ?>
-                <p class="description">API-nøkkel er lagret (kryptert). Lim inn en ny nøkkel for å erstatte den.</p>
+                <p class="description"><?php echo ai_seo_t( 'API-nøkkel er lagret (kryptert). Lim inn en ny nøkkel for å erstatte den.', 'API key is stored (encrypted). Paste a new key to replace it.' ); ?></p>
             <?php else : ?>
-                <p class="description">Skriv inn API-nøkkelen din. Den vil bli kryptert ved lagring.</p>
+                <p class="description"><?php echo ai_seo_t( 'Skriv inn API-nøkkelen din. Den vil bli kryptert ved lagring.', 'Enter your API key. It will be encrypted when saved.' ); ?></p>
             <?php endif; ?>
         <?php endif;
     }
@@ -350,7 +353,7 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_sitemap]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver XML-sitemap på <code>/sitemap.xml</code>
+            <?php echo ai_seo_t( 'Aktiver XML-sitemap på <code>/sitemap.xml</code>', 'Enable XML sitemap at <code>/sitemap.xml</code>' ); ?>
         </label>
         <?php
     }
@@ -361,7 +364,7 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_schema]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver Schema.org-markering på innlegg
+            <?php echo ai_seo_t( 'Aktiver Schema.org-markering på innlegg', 'Enable Schema.org markup on posts' ); ?>
         </label>
         <?php
     }
@@ -372,7 +375,7 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_opengraph]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver OpenGraph og Twitter Card-metatagger
+            <?php echo ai_seo_t( 'Aktiver OpenGraph og Twitter Card-metatagger', 'Enable OpenGraph and Twitter Card meta tags' ); ?>
         </label>
         <?php
     }
@@ -383,7 +386,7 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_breadcrumbs]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver brødsmuler (shortcode <code>[ai_seo_breadcrumbs]</code> og BreadcrumbList JSON-LD)
+            <?php echo ai_seo_t( 'Aktiver brødsmuler (shortcode <code>[ai_seo_breadcrumbs]</code> og BreadcrumbList JSON-LD)', 'Enable breadcrumbs (shortcode <code>[ai_seo_breadcrumbs]</code> and BreadcrumbList JSON-LD)' ); ?>
         </label>
         <?php
     }
@@ -394,9 +397,12 @@ class AI_SEO_Settings_Page {
         ?>
         <label>
             <input type="checkbox" name="ai_seo_options[enable_redirects]" value="1" <?php checked( $enabled, 1 ); ?> />
-            Aktiver omdirigeringsmodul (301/302)
+            <?php echo ai_seo_t( 'Aktiver omdirigeringsmodul (301/302)', 'Enable redirect module (301/302)' ); ?>
         </label>
-        <p class="description">Administrer omdirigeringer under <a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-seo-redirects' ) ); ?>">AI SEO > Omdirigeringer</a>.</p>
+        <p class="description"><?php echo ai_seo_t(
+            'Administrer omdirigeringer under <a href="' . esc_url( admin_url( 'admin.php?page=ai-seo-redirects' ) ) . '">AI SEO > Omdirigeringer</a>.',
+            'Manage redirects under <a href="' . esc_url( admin_url( 'admin.php?page=ai-seo-redirects' ) ) . '">AI SEO > Redirects</a>.'
+        ); ?></p>
         <?php
     }
 
@@ -408,8 +414,8 @@ class AI_SEO_Settings_Page {
                name="ai_seo_options[twitter_handle]"
                value="<?php echo esc_attr( $handle ); ?>"
                class="regular-text"
-               placeholder="@dittbrukernavn" />
-        <p class="description">Brukes i Twitter Card-metatagger (<code>twitter:site</code> og <code>twitter:creator</code>).</p>
+               placeholder="<?php echo esc_attr( ai_seo_t( '@dittbrukernavn', '@yourusername' ) ); ?>" />
+        <p class="description"><?php echo ai_seo_t( 'Brukes i Twitter Card-metatagger (<code>twitter:site</code> og <code>twitter:creator</code>).', 'Used in Twitter Card meta tags (<code>twitter:site</code> and <code>twitter:creator</code>).' ); ?></p>
         <?php
     }
 
@@ -418,16 +424,16 @@ class AI_SEO_Settings_Page {
         $org_type = isset( $options['schema_org_type'] ) ? $options['schema_org_type'] : '';
         ?>
         <select name="ai_seo_options[schema_org_type]">
-            <option value="" <?php selected( $org_type, '' ); ?>>Ingen (deaktivert)</option>
-            <option value="Organization" <?php selected( $org_type, 'Organization' ); ?>>Organisasjon</option>
-            <option value="LocalBusiness" <?php selected( $org_type, 'LocalBusiness' ); ?>>Lokal bedrift</option>
+            <option value="" <?php selected( $org_type, '' ); ?>><?php echo ai_seo_t( 'Ingen (deaktivert)', 'None (disabled)' ); ?></option>
+            <option value="Organization" <?php selected( $org_type, 'Organization' ); ?>><?php echo ai_seo_t( 'Organisasjon', 'Organization' ); ?></option>
+            <option value="LocalBusiness" <?php selected( $org_type, 'LocalBusiness' ); ?>><?php echo ai_seo_t( 'Lokal bedrift', 'Local Business' ); ?></option>
             <option value="Restaurant" <?php selected( $org_type, 'Restaurant' ); ?>>Restaurant</option>
-            <option value="Store" <?php selected( $org_type, 'Store' ); ?>>Butikk</option>
-            <option value="MedicalBusiness" <?php selected( $org_type, 'MedicalBusiness' ); ?>>Medisinsk virksomhet</option>
-            <option value="LegalService" <?php selected( $org_type, 'LegalService' ); ?>>Juridisk tjeneste</option>
-            <option value="FinancialService" <?php selected( $org_type, 'FinancialService' ); ?>>Finanstjeneste</option>
+            <option value="Store" <?php selected( $org_type, 'Store' ); ?>><?php echo ai_seo_t( 'Butikk', 'Store' ); ?></option>
+            <option value="MedicalBusiness" <?php selected( $org_type, 'MedicalBusiness' ); ?>><?php echo ai_seo_t( 'Medisinsk virksomhet', 'Medical Business' ); ?></option>
+            <option value="LegalService" <?php selected( $org_type, 'LegalService' ); ?>><?php echo ai_seo_t( 'Juridisk tjeneste', 'Legal Service' ); ?></option>
+            <option value="FinancialService" <?php selected( $org_type, 'FinancialService' ); ?>><?php echo ai_seo_t( 'Finanstjeneste', 'Financial Service' ); ?></option>
         </select>
-        <p class="description">Vises som JSON-LD på forsiden.</p>
+        <p class="description"><?php echo ai_seo_t( 'Vises som JSON-LD på forsiden.', 'Displayed as JSON-LD on the front page.' ); ?></p>
         <?php
     }
 
@@ -461,12 +467,12 @@ class AI_SEO_Settings_Page {
         }
         ?>
         <div class="wrap ai-seo-settings">
-            <h1>AI SEO Innstillinger</h1>
+            <h1><?php echo ai_seo_t( 'AI SEO Innstillinger', 'AI SEO Settings' ); ?></h1>
             <form method="post" action="options.php">
                 <?php
                 settings_fields( 'ai_seo_settings' );
                 do_settings_sections( 'ai-seo' );
-                submit_button( 'Lagre innstillinger' );
+                submit_button( ai_seo_t( 'Lagre innstillinger', 'Save settings' ) );
                 ?>
             </form>
         </div>

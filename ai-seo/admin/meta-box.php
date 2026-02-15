@@ -60,7 +60,7 @@ class AI_SEO_Meta_Box {
         <div class="ai-seo-meta-box">
             <!-- SEO Fields -->
             <div class="ai-seo-field">
-                <label for="ai_seo_meta_title">SEO-tittel</label>
+                <label for="ai_seo_meta_title"><?php echo ai_seo_t('SEO-tittel', 'SEO Title'); ?></label>
                 <input type="text"
                        id="ai_seo_meta_title"
                        name="ai_seo_meta_title"
@@ -73,7 +73,7 @@ class AI_SEO_Meta_Box {
             </div>
 
             <div class="ai-seo-field">
-                <label for="ai_seo_meta_description">Metabeskrivelse</label>
+                <label for="ai_seo_meta_description"><?php echo ai_seo_t('Metabeskrivelse', 'Meta Description'); ?></label>
                 <textarea id="ai_seo_meta_description"
                           name="ai_seo_meta_description"
                           class="large-text"
@@ -85,7 +85,7 @@ class AI_SEO_Meta_Box {
             </div>
 
             <div class="ai-seo-field">
-                <label for="ai_seo_focus_keyword">Fokus-søkeord</label>
+                <label for="ai_seo_focus_keyword"><?php echo ai_seo_t('Fokus-søkeord', 'Focus Keyword'); ?></label>
                 <input type="text"
                        id="ai_seo_focus_keyword"
                        name="ai_seo_focus_keyword"
@@ -95,27 +95,27 @@ class AI_SEO_Meta_Box {
 
             <!-- Robots Meta -->
             <div class="ai-seo-field">
-                <label>Robots-metatagger</label>
+                <label><?php echo ai_seo_t('Robots-metatagger', 'Robots Meta Tags'); ?></label>
                 <div class="ai-seo-checkbox-group">
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="noindex" <?php checked( in_array( 'noindex', $robots_meta, true ) ); ?> />
                         noindex
-                        <span class="ai-seo-tooltip" data-tip="Siden vil ikke dukke opp i Google-s&oslash;k. Bruk dette p&aring; sider som ikke trenger organisk trafikk, f.eks. takkesider eller interne landingssider.">?</span>
+                        <span class="ai-seo-tooltip" data-tip="<?php echo ai_seo_t('Siden vil ikke dukke opp i Google-s&oslash;k. Bruk dette p&aring; sider som ikke trenger organisk trafikk, f.eks. takkesider eller interne landingssider.', 'The page will not appear in Google search. Use this for pages that don&rsquo;t need organic traffic, e.g. thank-you pages or internal landing pages.'); ?>">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="nofollow" <?php checked( in_array( 'nofollow', $robots_meta, true ) ); ?> />
                         nofollow
-                        <span class="ai-seo-tooltip" data-tip="S&oslash;kemotorer vil ikke f&oslash;lge lenker p&aring; denne siden. Lenke-juice overf&oslash;res ikke til sidene du lenker til herfra.">?</span>
+                        <span class="ai-seo-tooltip" data-tip="<?php echo ai_seo_t('S&oslash;kemotorer vil ikke f&oslash;lge lenker p&aring; denne siden. Lenke-juice overf&oslash;res ikke til sidene du lenker til herfra.', 'Search engines will not follow links on this page. Link juice will not be passed to the pages you link to from here.'); ?>">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="noarchive" <?php checked( in_array( 'noarchive', $robots_meta, true ) ); ?> />
                         noarchive
-                        <span class="ai-seo-tooltip" data-tip="Google vil ikke vise &laquo;Hurtigbufret&raquo;-lenken i s&oslash;keresultatet. Nyttig for innhold som endres ofte.">?</span>
+                        <span class="ai-seo-tooltip" data-tip="<?php echo ai_seo_t('Google vil ikke vise &laquo;Hurtigbufret&raquo;-lenken i s&oslash;keresultatet. Nyttig for innhold som endres ofte.', 'Google will not show a &laquo;Cached&raquo; link in the search result. Useful for content that changes frequently.'); ?>">?</span>
                     </label>
                     <label>
                         <input type="checkbox" name="ai_seo_robots_meta[]" value="nosnippet" <?php checked( in_array( 'nosnippet', $robots_meta, true ) ); ?> />
                         nosnippet
-                        <span class="ai-seo-tooltip" data-tip="Ingen tekstutdrag vises under tittelen i s&oslash;keresultatet. Siden f&aring;r kun tittel og URL &mdash; kan redusere klikkrate betraktelig.">?</span>
+                        <span class="ai-seo-tooltip" data-tip="<?php echo ai_seo_t('Ingen tekstutdrag vises under tittelen i s&oslash;keresultatet. Siden f&aring;r kun tittel og URL &mdash; kan redusere klikkrate betraktelig.', 'No text snippet will be shown below the title in search results. The page will only get a title and URL &mdash; can reduce click-through rate significantly.'); ?>">?</span>
                     </label>
                 </div>
             </div>
@@ -124,24 +124,24 @@ class AI_SEO_Meta_Box {
             <div class="ai-seo-field">
                 <label>
                     <input type="checkbox" name="ai_seo_cornerstone" value="1" <?php checked( $cornerstone, '1' ); ?> />
-                    <strong>Cornerstone-innhold</strong>
-                    <span class="description"> – Marker som viktig innhold for intern lenking</span>
+                    <strong><?php echo ai_seo_t('Cornerstone-innhold', 'Cornerstone Content'); ?></strong>
+                    <span class="description"><?php echo ai_seo_t(' – Marker som viktig innhold for intern lenking', ' – Mark as important content for internal linking'); ?></span>
                 </label>
             </div>
 
             <!-- Schema Type -->
             <div class="ai-seo-field">
-                <label for="ai_seo_schema_type">Schema-type</label>
+                <label for="ai_seo_schema_type"><?php echo ai_seo_t('Schema-type', 'Schema Type'); ?></label>
                 <select name="ai_seo_schema_type" id="ai_seo_schema_type">
-                    <option value="" <?php selected( $schema_type, '' ); ?>>Standard (Article)</option>
-                    <option value="faq" <?php selected( $schema_type, 'faq' ); ?>>FAQPage (bruker H3 som spørsmål)</option>
-                    <option value="howto" <?php selected( $schema_type, 'howto' ); ?>>HowTo (bruker H3 som steg)</option>
+                    <option value="" <?php selected( $schema_type, '' ); ?>><?php echo ai_seo_t('Standard (Article)', 'Default (Article)'); ?></option>
+                    <option value="faq" <?php selected( $schema_type, 'faq' ); ?>><?php echo ai_seo_t('FAQPage (bruker H3 som spørsmål)', 'FAQPage (uses H3 as questions)'); ?></option>
+                    <option value="howto" <?php selected( $schema_type, 'howto' ); ?>><?php echo ai_seo_t('HowTo (bruker H3 som steg)', 'HowTo (uses H3 as steps)'); ?></option>
                 </select>
             </div>
 
             <!-- Social Image -->
             <div class="ai-seo-field">
-                <label>Sosialt bilde (OpenGraph / Twitter)</label>
+                <label><?php echo ai_seo_t('Sosialt bilde (OpenGraph / Twitter)', 'Social Image (OpenGraph / Twitter)'); ?></label>
                 <div class="ai-seo-social-image">
                     <input type="hidden" name="ai_seo_social_image_id" id="ai_seo_social_image_id" value="<?php echo esc_attr( $social_image_id ); ?>" />
                     <?php if ( $social_image_url ) : ?>
@@ -151,15 +151,15 @@ class AI_SEO_Meta_Box {
                     <?php else : ?>
                         <div id="ai-seo-social-image-preview" style="display:none;"></div>
                     <?php endif; ?>
-                    <button type="button" class="button" id="ai-seo-upload-social-image">Velg bilde</button>
-                    <button type="button" class="button" id="ai-seo-remove-social-image" <?php echo $social_image_id ? '' : 'style="display:none;"'; ?>>Fjern bilde</button>
-                    <p class="description">Overskriver fremhevet bilde for sosiale medier. Anbefalt: 1200x630 piksler.</p>
+                    <button type="button" class="button" id="ai-seo-upload-social-image"><?php echo ai_seo_t('Velg bilde', 'Select Image'); ?></button>
+                    <button type="button" class="button" id="ai-seo-remove-social-image" <?php echo $social_image_id ? '' : 'style="display:none;"'; ?>><?php echo ai_seo_t('Fjern bilde', 'Remove Image'); ?></button>
+                    <p class="description"><?php echo ai_seo_t('Overskriver fremhevet bilde for sosiale medier. Anbefalt: 1200x630 piksler.', 'Overrides the featured image for social media. Recommended: 1200x630 pixels.'); ?></p>
                 </div>
             </div>
 
             <!-- SERP Preview -->
             <div class="ai-seo-serp-preview">
-                <h4>Forhåndsvisning i søkeresultat</h4>
+                <h4><?php echo ai_seo_t('Forhåndsvisning i søkeresultat', 'Search Result Preview'); ?></h4>
                 <div class="ai-seo-serp">
                     <div class="ai-seo-serp-title" id="ai-seo-serp-title">
                         <?php echo esc_html( $meta_title ? $meta_title : $post->post_title ); ?>
@@ -176,13 +176,13 @@ class AI_SEO_Meta_Box {
             <!-- SEO Score / Checklist -->
             <div class="ai-seo-seo-score">
                 <h4>
-                    SEO-analyse
+                    <?php echo ai_seo_t('SEO-analyse', 'SEO Analysis'); ?>
                     <button type="button" class="button button-small" id="ai-seo-refresh-score" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-left:10px;">
-                        Oppdater analyse
+                        <?php echo ai_seo_t('Oppdater analyse', 'Refresh Analysis'); ?>
                     </button>
                 </h4>
                 <div class="ai-seo-readability-score ai-seo-score-<?php echo esc_attr( $seo_score['rating'] ); ?>" id="ai-seo-score-badge">
-                    <strong>SEO-score: <span id="ai-seo-score-value"><?php echo esc_html( $seo_score['score'] ); ?></span>/100</strong>
+                    <strong><?php echo ai_seo_t('SEO-score:', 'SEO Score:'); ?> <span id="ai-seo-score-value"><?php echo esc_html( $seo_score['score'] ); ?></span>/100</strong>
                 </div>
                 <ul class="ai-seo-checklist" id="ai-seo-checklist">
                     <?php foreach ( $seo_score['checks'] as $check ) : ?>
@@ -199,7 +199,7 @@ class AI_SEO_Meta_Box {
 
             <!-- Readability -->
             <div class="ai-seo-readability">
-                <h4>Lesbarhetsanalyse</h4>
+                <h4><?php echo ai_seo_t('Lesbarhetsanalyse', 'Readability Analysis'); ?></h4>
                 <?php if ( ! empty( $content ) ) : ?>
                     <div class="ai-seo-readability-score ai-seo-score-<?php echo esc_attr( $score_data['rating'] ); ?>">
                         <strong>Score: <?php echo esc_html( $score_data['score'] ); ?>/100</strong>
@@ -209,23 +209,23 @@ class AI_SEO_Meta_Box {
                         <?php endif; ?>
                     </div>
                     <ul class="ai-seo-readability-details">
-                        <li>Gjennomsnittlig setningslengde: <?php echo esc_html( $score_data['avg_sentence_length'] ); ?> ord</li>
-                        <li>Gjennomsnittlig ordlengde: <?php echo esc_html( $score_data['avg_word_length'] ); ?> tegn</li>
-                        <li>Antall setninger: <?php echo esc_html( $score_data['sentence_count'] ); ?></li>
-                        <li>Antall ord: <?php echo esc_html( $score_data['word_count'] ); ?></li>
+                        <li><?php echo ai_seo_t('Gjennomsnittlig setningslengde:', 'Average sentence length:'); ?> <?php echo esc_html( $score_data['avg_sentence_length'] ); ?> <?php echo ai_seo_t('ord', 'words'); ?></li>
+                        <li><?php echo ai_seo_t('Gjennomsnittlig ordlengde:', 'Average word length:'); ?> <?php echo esc_html( $score_data['avg_word_length'] ); ?> <?php echo ai_seo_t('tegn', 'chars'); ?></li>
+                        <li><?php echo ai_seo_t('Antall setninger:', 'Sentence count:'); ?> <?php echo esc_html( $score_data['sentence_count'] ); ?></li>
+                        <li><?php echo ai_seo_t('Antall ord:', 'Word count:'); ?> <?php echo esc_html( $score_data['word_count'] ); ?></li>
                         <?php if ( isset( $score_data['passive_percentage'] ) ) : ?>
-                            <li>Passiv stemme: <?php echo esc_html( $score_data['passive_percentage'] ); ?> %</li>
+                            <li><?php echo ai_seo_t('Passiv stemme:', 'Passive voice:'); ?> <?php echo esc_html( $score_data['passive_percentage'] ); ?> %</li>
                         <?php endif; ?>
                         <?php if ( isset( $score_data['transition_percentage'] ) ) : ?>
-                            <li>Overgangsord: <?php echo esc_html( $score_data['transition_percentage'] ); ?> %</li>
+                            <li><?php echo ai_seo_t('Overgangsord:', 'Transition words:'); ?> <?php echo esc_html( $score_data['transition_percentage'] ); ?> %</li>
                         <?php endif; ?>
                         <?php if ( isset( $score_data['long_sentences_pct'] ) ) : ?>
-                            <li>Lange setninger (>25 ord): <?php echo esc_html( $score_data['long_sentences_pct'] ); ?> %</li>
+                            <li><?php echo ai_seo_t('Lange setninger (>25 ord):', 'Long sentences (>25 words):'); ?> <?php echo esc_html( $score_data['long_sentences_pct'] ); ?> %</li>
                         <?php endif; ?>
                     </ul>
                     <?php if ( ! empty( $score_data['suggestions'] ) ) : ?>
                         <div class="ai-seo-suggestions">
-                            <strong>Forbedringsforslag:</strong>
+                            <strong><?php echo ai_seo_t('Forbedringsforslag:', 'Suggestions for improvement:'); ?></strong>
                             <ul>
                                 <?php foreach ( $score_data['suggestions'] as $suggestion ) : ?>
                                     <li><?php echo esc_html( $suggestion ); ?></li>
@@ -234,45 +234,45 @@ class AI_SEO_Meta_Box {
                         </div>
                     <?php endif; ?>
                     <button type="button" class="button button-small" id="ai-seo-highlight-readability" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-top:10px;">
-                        Vis i teksten
+                        <?php echo ai_seo_t('Vis i teksten', 'Show in text'); ?>
                     </button>
                     <div class="ai-seo-highlight-panel" id="ai-seo-highlight-panel" style="display:none;">
                         <div class="ai-seo-highlight-legend">
-                            <span class="ai-seo-hl-long">Lang setning (&gt;25 ord)</span>
-                            <span class="ai-seo-hl-passive">Passiv stemme</span>
+                            <span class="ai-seo-hl-long"><?php echo ai_seo_t('Lang setning (&gt;25 ord)', 'Long sentence (&gt;25 words)'); ?></span>
+                            <span class="ai-seo-hl-passive"><?php echo ai_seo_t('Passiv stemme', 'Passive voice'); ?></span>
                         </div>
                         <div class="ai-seo-highlight-content" id="ai-seo-highlight-content"></div>
                     </div>
                 <?php else : ?>
-                    <p class="description">Legg til innhold for å se lesbarhetsanalyse.</p>
+                    <p class="description"><?php echo ai_seo_t('Legg til innhold for å se lesbarhetsanalyse.', 'Add content to see readability analysis.'); ?></p>
                 <?php endif; ?>
             </div>
 
             <!-- AI Actions -->
             <div class="ai-seo-ai-actions">
-                <h4>AI-verktøy</h4>
-                <p class="ai-seo-workflow-hint">Skriv innholdet ferdig først, så bruk knappene under til å fylle ut SEO-feltene automatisk.</p>
+                <h4><?php echo ai_seo_t('AI-verktøy', 'AI Tools'); ?></h4>
+                <p class="ai-seo-workflow-hint"><?php echo ai_seo_t('Skriv innholdet ferdig først, så bruk knappene under til å fylle ut SEO-feltene automatisk.', 'Finish writing the content first, then use the buttons below to fill in the SEO fields automatically.'); ?></p>
                 <div class="ai-seo-button-group">
                     <button type="button" class="button button-secondary" id="ai-seo-suggest-keyword" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Foreslå fokusord
+                        <?php echo ai_seo_t('Foreslå fokusord', 'Suggest Focus Keyword'); ?>
                     </button>
                     <button type="button" class="button button-secondary" id="ai-seo-suggest-title" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Foreslå tittel
+                        <?php echo ai_seo_t('Foreslå tittel', 'Suggest Title'); ?>
                     </button>
                     <button type="button" class="button button-secondary" id="ai-seo-generate-desc" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Generer metabeskrivelse
+                        <?php echo ai_seo_t('Generer metabeskrivelse', 'Generate Meta Description'); ?>
                     </button>
                 </div>
                 <div class="ai-seo-button-group ai-seo-button-group-secondary">
                     <button type="button" class="button button-secondary" id="ai-seo-analyze-keywords" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Analyser søkeord
+                        <?php echo ai_seo_t('Analyser søkeord', 'Analyze Keywords'); ?>
                     </button>
                     <button type="button" class="button button-secondary" id="ai-seo-suggest-links" data-post-id="<?php echo esc_attr( $post->ID ); ?>">
-                        Foreslå interne lenker
+                        <?php echo ai_seo_t('Foreslå interne lenker', 'Suggest Internal Links'); ?>
                     </button>
                 </div>
                 <div class="ai-seo-spinner" id="ai-seo-spinner" style="display:none;">
-                    <span class="spinner is-active"></span> Venter på AI-svar&hellip;
+                    <span class="spinner is-active"></span> <?php echo ai_seo_t('Venter på AI-svar&hellip;', 'Waiting for AI response&hellip;'); ?>
                 </div>
                 <div class="ai-seo-result" id="ai-seo-result" style="display:none;"></div>
                 <div class="ai-seo-error" id="ai-seo-error" style="display:none;"></div>
@@ -291,14 +291,14 @@ class AI_SEO_Meta_Box {
             ?>
             <?php if ( ! empty( $cornerstone_posts ) ) : ?>
                 <div class="ai-seo-cornerstone-links">
-                    <h4>Cornerstone-innhold du kan lenke til</h4>
+                    <h4><?php echo ai_seo_t('Cornerstone-innhold du kan lenke til', 'Cornerstone content you can link to'); ?></h4>
                     <ul>
                         <?php foreach ( $cornerstone_posts as $cp ) : ?>
                             <li>
                                 <a href="<?php echo esc_url( get_permalink( $cp->ID ) ); ?>" target="_blank">
                                     <?php echo esc_html( $cp->post_title ); ?>
                                 </a>
-                                <code class="ai-seo-copy-url" title="Klikk for å kopiere"><?php echo esc_url( get_permalink( $cp->ID ) ); ?></code>
+                                <code class="ai-seo-copy-url" title="<?php echo ai_seo_t('Klikk for å kopiere', 'Click to copy'); ?>"><?php echo esc_url( get_permalink( $cp->ID ) ); ?></code>
                             </li>
                         <?php endforeach; ?>
                     </ul>
