@@ -12,6 +12,7 @@ class AI_SEO_Meta_Box {
 
     public function register_meta_box() {
         $post_types = get_post_types( array( 'public' => true ), 'names' );
+        unset( $post_types['attachment'] );
 
         foreach ( $post_types as $post_type ) {
             add_meta_box(
