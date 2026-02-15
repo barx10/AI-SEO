@@ -11,7 +11,8 @@ class AI_SEO_Redirects_Page {
     }
 
     public function add_menu_page() {
-        add_management_page(
+        add_submenu_page(
+            'ai-seo',
             'AI SEO – Omdirigeringer',
             'Omdirigeringer',
             'manage_options',
@@ -56,7 +57,7 @@ class AI_SEO_Redirects_Page {
         if ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' && isset( $_GET['redirect_id'] ) ) {
             check_admin_referer( 'ai_seo_redirect_delete_' . $_GET['redirect_id'] );
             AI_SEO_Redirects::delete( absint( $_GET['redirect_id'] ) );
-            wp_safe_redirect( admin_url( 'tools.php?page=ai-seo-redirects&deleted=1' ) );
+            wp_safe_redirect( admin_url( 'admin.php?page=ai-seo-redirects&deleted=1' ) );
             exit;
         }
     }
@@ -170,7 +171,7 @@ class AI_SEO_Redirects_Page {
                                 <td><?php echo esc_html( date_i18n( 'Y-m-d H:i', strtotime( $r->created_at ) ) ); ?></td>
                                 <td>
                                     <a href="<?php echo esc_url( wp_nonce_url(
-                                        admin_url( 'tools.php?page=ai-seo-redirects&action=delete&redirect_id=' . $r->id ),
+                                        admin_url( 'admin.php?page=ai-seo-redirects&action=delete&redirect_id=' . $r->id ),
                                         'ai_seo_redirect_delete_' . $r->id
                                     ) ); ?>" class="ai-seo-delete-link" onclick="return confirm('Er du sikker på at du vil slette denne omdirigeringen?');">Slett</a>
                                 </td>

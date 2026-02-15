@@ -11,9 +11,20 @@ class AI_SEO_Settings_Page {
     }
 
     public function add_menu_page() {
-        add_options_page(
-            'AI SEO Innstillinger',
+        add_menu_page(
             'AI SEO',
+            'AI SEO',
+            'manage_options',
+            'ai-seo',
+            array( $this, 'render_page' ),
+            'dashicons-chart-area',
+            80
+        );
+
+        add_submenu_page(
+            'ai-seo',
+            'AI SEO Innstillinger',
+            'Innstillinger',
             'manage_options',
             'ai-seo',
             array( $this, 'render_page' )
@@ -357,7 +368,7 @@ class AI_SEO_Settings_Page {
             <input type="checkbox" name="ai_seo_options[enable_redirects]" value="1" <?php checked( $enabled, 1 ); ?> />
             Aktiver omdirigeringsmodul (301/302)
         </label>
-        <p class="description">Administrer omdirigeringer under <a href="<?php echo esc_url( admin_url( 'tools.php?page=ai-seo-redirects' ) ); ?>">Verktøy > Omdirigeringer</a>.</p>
+        <p class="description">Administrer omdirigeringer under <a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-seo-redirects' ) ); ?>">AI SEO > Omdirigeringer</a>.</p>
         <?php
     }
 
