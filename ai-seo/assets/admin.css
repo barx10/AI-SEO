@@ -709,19 +709,13 @@
 
 /* --- Bulk Column Inline Editing --- */
 
-.column-ai_seo_title {
-    width: 15%;
-    min-width: 120px;
-}
-
+.column-ai_seo_title,
 .column-ai_seo_description {
-    width: 18%;
-    min-width: 140px;
+    width: 10%;
 }
 
 .column-ai_seo_score {
     width: 50px;
-    min-width: 50px;
     text-align: center;
 }
 
@@ -730,7 +724,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
 }
 
 .ai-seo-inline-edit {
