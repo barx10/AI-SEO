@@ -14,11 +14,7 @@ class AI_SEO_Client {
 
         $this->provider = isset( $options['ai_provider'] ) ? $options['ai_provider'] : 'anthropic';
         $this->model    = isset( $options['ai_model'] ) ? $options['ai_model'] : 'claude-sonnet-4-5-20250929';
-        $this->api_key  = '';
-
-        if ( ! empty( $options['api_key'] ) ) {
-            $this->api_key = AI_SEO_Settings_Page::decrypt_key( $options['api_key'] );
-        }
+        $this->api_key  = AI_SEO_Settings_Page::get_api_key();
     }
 
     /**
@@ -142,7 +138,7 @@ class AI_SEO_Client {
      * Send request to the Google Gemini API.
      */
     private function request_gemini( $prompt ) {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode( $this->model ) . ':generateContent?key=' . urlencode( $this->api_key );
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode( $this->model ) . ':generateContent';
 
         $body = wp_json_encode( array(
             'contents' => array(
@@ -180,7 +176,8 @@ class AI_SEO_Client {
         $response = wp_remote_post( $url, array(
             'timeout' => 60,
             'headers' => array(
-                'Content-Type' => 'application/json',
+                'Content-Type'    => 'application/json',
+                'x-goog-api-key'  => $this->api_key,
             ),
             'body' => $body,
         ) );

@@ -71,8 +71,11 @@ class AI_SEO_Settings_Page {
             ? $input['ai_model']
             : 'claude-sonnet-4-5-20250929';
 
-        // Encrypt API key.
-        if ( ! empty( $input['api_key'] ) ) {
+        // Encrypt API key (skip if defined as constant in wp-config.php).
+        if ( defined( 'AI_SEO_API_KEY' ) ) {
+            // Constant takes precedence — don't store anything in DB.
+            $sanitized['api_key'] = '';
+        } elseif ( ! empty( $input['api_key'] ) ) {
             $sanitized['api_key'] = wp_hash( '__ai_seo_salt__' ) !== $input['api_key']
                 ? self::encrypt_key( sanitize_text_field( $input['api_key'] ) )
                 : self::get_stored_key_raw();
@@ -181,6 +184,24 @@ class AI_SEO_Settings_Page {
     }
 
     /**
+     * Get the decrypted API key.
+     *
+     * Priority: wp-config.php constant > encrypted DB value.
+     */
+    public static function get_api_key() {
+        if ( defined( 'AI_SEO_API_KEY' ) && AI_SEO_API_KEY ) {
+            return AI_SEO_API_KEY;
+        }
+
+        $options = get_option( 'ai_seo_options', array() );
+        if ( ! empty( $options['api_key'] ) ) {
+            return self::decrypt_key( $options['api_key'] );
+        }
+
+        return '';
+    }
+
+    /**
      * Check rate limit for AI API calls.
      *
      * @return bool True if within limit, false if rate limited.
@@ -255,22 +276,33 @@ class AI_SEO_Settings_Page {
     }
 
     public function render_api_key_field() {
-        $options  = get_option( 'ai_seo_options', array() );
-        $has_key  = ! empty( $options['api_key'] );
-        ?>
-        <input type="password"
-               name="ai_seo_options[api_key]"
-               id="ai_seo_api_key"
-               value="<?php echo esc_attr( $has_key ? wp_hash( '__ai_seo_salt__' ) : '' ); ?>"
-               class="regular-text"
-               autocomplete="off" />
-        <button type="button" class="button button-secondary" id="ai-seo-toggle-key">Vis/skjul</button>
-        <?php if ( $has_key ) : ?>
-            <p class="description">API-nøkkel er lagret (kryptert). Lim inn en ny nøkkel for å erstatte den.</p>
+        $options      = get_option( 'ai_seo_options', array() );
+        $has_key      = ! empty( $options['api_key'] );
+        $has_constant = defined( 'AI_SEO_API_KEY' ) && AI_SEO_API_KEY;
+
+        if ( $has_constant ) : ?>
+            <input type="text" value="Definert via AI_SEO_API_KEY i wp-config.php" class="regular-text" disabled />
+            <p class="description" style="color: #00a32a;">
+                API-nøkkelen leses fra <code>wp-config.php</code>-konstanten <code>AI_SEO_API_KEY</code>. Dette er den sikreste metoden &mdash; nøkkelen lagres aldri i databasen.
+            </p>
         <?php else : ?>
-            <p class="description">Skriv inn API-nøkkelen din. Den vil bli kryptert ved lagring.</p>
-        <?php endif; ?>
-        <?php
+            <input type="password"
+                   name="ai_seo_options[api_key]"
+                   id="ai_seo_api_key"
+                   value="<?php echo esc_attr( $has_key ? wp_hash( '__ai_seo_salt__' ) : '' ); ?>"
+                   class="regular-text"
+                   autocomplete="off" />
+            <button type="button" class="button button-secondary" id="ai-seo-toggle-key">Vis/skjul</button>
+            <?php if ( $has_key ) : ?>
+                <p class="description">API-nøkkel er lagret (kryptert). Lim inn en ny nøkkel for å erstatte den.</p>
+            <?php else : ?>
+                <p class="description">Skriv inn API-nøkkelen din. Den vil bli kryptert ved lagring.</p>
+            <?php endif; ?>
+            <p class="description">
+                <strong>Anbefalt:</strong> Definer nøkkelen i <code>wp-config.php</code> i stedet:<br />
+                <code>define( 'AI_SEO_API_KEY', 'din-nøkkel-her' );</code>
+            </p>
+        <?php endif;
     }
 
     public function render_sitemap_field() {
