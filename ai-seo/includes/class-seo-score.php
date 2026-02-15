@@ -222,7 +222,9 @@ class AI_SEO_Score {
         if ( $word_count === 0 ) {
             return 0;
         }
-        $keyword_count = mb_substr_count( mb_strtolower( $text ), mb_strtolower( $keyword ) );
+        $text_lower    = mb_strtolower( self::normalize_for_comparison( $text ) );
+        $keyword_lower = mb_strtolower( self::normalize_for_comparison( $keyword ) );
+        $keyword_count = substr_count( $text_lower, $keyword_lower );
         $keyword_words = str_word_count( $keyword );
         if ( $keyword_words === 0 ) {
             $keyword_words = 1;
