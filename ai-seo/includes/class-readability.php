@@ -323,36 +323,54 @@ class AI_SEO_Readability {
      * @return string Annotated HTML.
      */
     public function highlight( $html ) {
-        // Strip tags but keep paragraph breaks for display.
-        $text = wp_strip_all_tags( $html );
+        // Convert block-level closing tags to double newlines before stripping,
+        // so paragraph structure is preserved after tag removal.
+        $text = preg_replace( '/<\/(?:p|div|blockquote|li|h[1-6])>/i', "\n\n", $html );
+        $text = preg_replace( '/<br\s*\/?>/i', "\n", $text );
+        $text = wp_strip_all_tags( $text );
         $text = trim( $text );
 
         if ( empty( $text ) ) {
             return '';
         }
 
-        // Split into sentences while keeping delimiters.
-        $parts = preg_split( '/([.!?]+[\s]+|[.!?]+$)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+        // Split into paragraphs.
+        $paragraphs = preg_split( '/\n\s*\n/', $text, -1, PREG_SPLIT_NO_EMPTY );
 
-        $output    = '';
-        $sentence  = '';
-        $index     = 0;
+        $output = '';
+        $index  = 0;
 
-        foreach ( $parts as $part ) {
-            // Delimiters (punctuation + space) — append to current sentence then flush.
-            if ( preg_match( '/^[.!?]+[\s]*$/u', $part ) ) {
-                $sentence .= $part;
-                $output   .= $this->wrap_sentence( $sentence, $index );
-                $sentence  = '';
-                $index++;
-            } else {
-                $sentence = $part;
+        foreach ( $paragraphs as $para ) {
+            $para = trim( $para );
+            if ( $para === '' ) {
+                continue;
             }
-        }
 
-        // Flush remaining.
-        if ( $sentence !== '' ) {
-            $output .= $this->wrap_sentence( $sentence, $index );
+            $output .= '<p class="ai-seo-hl-paragraph">';
+
+            // Split into sentences while keeping delimiters.
+            $parts    = preg_split( '/([.!?]+[\s]+|[.!?]+$)/u', $para, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+            $sentence = '';
+
+            foreach ( $parts as $part ) {
+                // Delimiters (punctuation + space) — append to current sentence then flush.
+                if ( preg_match( '/^[.!?]+[\s]*$/u', $part ) ) {
+                    $sentence .= $part;
+                    $output   .= $this->wrap_sentence( $sentence, $index );
+                    $sentence  = '';
+                    $index++;
+                } else {
+                    $sentence = $part;
+                }
+            }
+
+            // Flush remaining.
+            if ( $sentence !== '' ) {
+                $output .= $this->wrap_sentence( $sentence, $index );
+                $index++;
+            }
+
+            $output .= '</p>';
         }
 
         return $output;
