@@ -241,7 +241,9 @@ class AI_SEO_Meta_Box {
                         <div class="ai-seo-highlight-legend">
                             <span class="ai-seo-hl-long">Lang setning (&gt;25 ord)</span>
                             <span class="ai-seo-hl-passive">Passiv stemme</span>
+                            <span class="ai-seo-hl-no-transition">Mangler overgangsord</span>
                         </div>
+                        <p class="ai-seo-highlight-hint">Klikk på en uthevet setning for å gå til den i editoren.</p>
                         <div class="ai-seo-highlight-content" id="ai-seo-highlight-content"></div>
                     </div>
                 <?php else : ?>

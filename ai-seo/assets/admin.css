@@ -314,31 +314,62 @@
     font-weight: 500;
 }
 
+.ai-seo-highlight-hint {
+    margin: 0 0 10px;
+    font-size: 12px;
+    color: #8c8f94;
+    font-style: italic;
+}
+
 .ai-seo-highlight-content {
     font-size: 13px;
     line-height: 1.8;
     color: #1d2327;
 }
 
+.ai-seo-hl-long,
+.ai-seo-hl-passive,
+.ai-seo-hl-no-transition {
+    padding: 1px 2px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.ai-seo-hl-long:hover,
+.ai-seo-hl-passive:hover,
+.ai-seo-hl-no-transition:hover {
+    opacity: 0.8;
+}
+
 .ai-seo-hl-long {
     background: #fce4e4;
     border-bottom: 2px solid #d63638;
-    padding: 1px 2px;
-    border-radius: 2px;
-    cursor: help;
 }
 
 .ai-seo-hl-passive {
     background: #fff3cd;
     border-bottom: 2px solid #dba617;
-    padding: 1px 2px;
-    border-radius: 2px;
-    cursor: help;
+}
+
+.ai-seo-hl-no-transition {
+    background: #e8f4fd;
+    border-bottom: 2px solid #2271b1;
 }
 
 .ai-seo-hl-long.ai-seo-hl-passive {
     background: linear-gradient(135deg, #fce4e4 50%, #fff3cd 50%);
     border-bottom: 2px solid #d63638;
+}
+
+.ai-seo-hl-long.ai-seo-hl-no-transition {
+    background: linear-gradient(135deg, #fce4e4 50%, #e8f4fd 50%);
+    border-bottom: 2px solid #d63638;
+}
+
+.ai-seo-hl-passive.ai-seo-hl-no-transition {
+    background: linear-gradient(135deg, #fff3cd 50%, #e8f4fd 50%);
+    border-bottom: 2px solid #dba617;
 }
 
 .ai-seo-highlight-content [data-tip]:hover {

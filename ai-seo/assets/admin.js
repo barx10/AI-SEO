@@ -468,6 +468,7 @@
                             if (response.success && response.data && highlightContent && highlightPanel) {
                                 highlightContent.innerHTML = response.data.html;
                                 highlightPanel.style.display = 'block';
+                                initHighlightNavigation();
                             }
                         } catch (e) {}
                     }
@@ -475,6 +476,113 @@
 
                 xhr.send(formData);
             });
+        }
+
+        // --- Click-to-navigate: scroll to sentence in editor ---
+
+        function initHighlightNavigation() {
+            if (!highlightContent) return;
+
+            highlightContent.addEventListener('click', function (e) {
+                var span = e.target.closest('[data-sentence]');
+                if (!span) return;
+
+                var sentence = span.textContent.trim();
+                var searchText = sentence.substring(0, 60);
+                scrollToSentenceInEditor(searchText);
+            });
+        }
+
+        function scrollToSentenceInEditor(searchText) {
+            var found = false;
+
+            // Try Gutenberg editor (iframe variant).
+            var iframe = document.querySelector('iframe[name="editor-canvas"]');
+            if (!found && iframe && iframe.contentDocument) {
+                found = findAndScrollToText(iframe.contentDocument.body, searchText, iframe.contentDocument);
+            }
+
+            // Try Gutenberg editor (non-iframe variant).
+            if (!found) {
+                var wrapper = document.querySelector('.editor-styles-wrapper');
+                if (wrapper) {
+                    found = findAndScrollToText(wrapper, searchText, document);
+                }
+            }
+
+            // Try Classic Editor (TinyMCE).
+            if (!found && typeof tinymce !== 'undefined' && tinymce.activeEditor && !tinymce.activeEditor.isHidden()) {
+                found = findAndScrollInTinyMCE(tinymce.activeEditor, searchText);
+            }
+
+            // Try plain textarea.
+            if (!found) {
+                var textarea = document.getElementById('content');
+                if (textarea) {
+                    scrollTextareaToText(textarea, searchText);
+                }
+            }
+        }
+
+        function findAndScrollToText(container, searchText, doc) {
+            var walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            var node;
+            var needle = searchText.toLowerCase();
+
+            while ((node = walker.nextNode())) {
+                if (node.textContent.toLowerCase().indexOf(needle) !== -1) {
+                    var el = node.parentElement;
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    el.style.outline = '2px solid #2271b1';
+                    el.style.outlineOffset = '2px';
+                    el.style.borderRadius = '2px';
+                    setTimeout(function () {
+                        el.style.outline = '';
+                        el.style.outlineOffset = '';
+                        el.style.borderRadius = '';
+                    }, 2000);
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function findAndScrollInTinyMCE(editor, searchText) {
+            var body = editor.getBody();
+            var doc = editor.getDoc();
+            var walker = doc.createTreeWalker(body, NodeFilter.SHOW_TEXT, null, false);
+            var node;
+            var needle = searchText.toLowerCase();
+
+            while ((node = walker.nextNode())) {
+                var nodeText = node.textContent.toLowerCase();
+                var pos = nodeText.indexOf(needle);
+                if (pos !== -1) {
+                    var range = doc.createRange();
+                    range.setStart(node, pos);
+                    range.setEnd(node, Math.min(pos + searchText.length, node.textContent.length));
+                    editor.selection.setRng(range);
+                    editor.selection.scrollIntoView();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function scrollTextareaToText(textarea, searchText) {
+            var text = textarea.value.toLowerCase();
+            var pos = text.indexOf(searchText.toLowerCase());
+            if (pos !== -1) {
+                textarea.focus();
+                textarea.setSelectionRange(pos, pos + searchText.length);
+                // Approximate scroll position.
+                var lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight, 10) || 20;
+                var charsPerLine = Math.floor(textarea.clientWidth / 8);
+                var lineNumber = charsPerLine > 0 ? Math.floor(pos / charsPerLine) : 0;
+                textarea.scrollTop = Math.max(0, lineNumber * lineHeight - textarea.clientHeight / 2);
+            }
         }
 
         // --- Migration buttons ---
