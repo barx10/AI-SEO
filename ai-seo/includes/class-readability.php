@@ -27,6 +27,18 @@ class AI_SEO_Readability {
     );
 
     /**
+     * Transition word suggestions grouped by function.
+     */
+    private static $transition_suggestions = array(
+        array( 'dessuten', 'videre', 'i tillegg' ),
+        array( 'derfor', 'dermed', 'følgelig' ),
+        array( 'imidlertid', 'likevel', 'derimot' ),
+        array( 'for eksempel', 'blant annet' ),
+        array( 'deretter', 'så', 'endelig' ),
+        array( 'samtidig', 'først og fremst' ),
+    );
+
+    /**
      * Analyze text readability with extended metrics.
      *
      * @param  string $text Plain text content (no HTML).
@@ -324,13 +336,15 @@ class AI_SEO_Readability {
 
         $output    = '';
         $sentence  = '';
+        $index     = 0;
 
         foreach ( $parts as $part ) {
             // Delimiters (punctuation + space) — append to current sentence then flush.
             if ( preg_match( '/^[.!?]+[\s]*$/u', $part ) ) {
                 $sentence .= $part;
-                $output   .= $this->wrap_sentence( $sentence );
+                $output   .= $this->wrap_sentence( $sentence, $index );
                 $sentence  = '';
+                $index++;
             } else {
                 $sentence = $part;
             }
@@ -338,7 +352,7 @@ class AI_SEO_Readability {
 
         // Flush remaining.
         if ( $sentence !== '' ) {
-            $output .= $this->wrap_sentence( $sentence );
+            $output .= $this->wrap_sentence( $sentence, $index );
         }
 
         return $output;
@@ -347,7 +361,7 @@ class AI_SEO_Readability {
     /**
      * Wrap a single sentence in a <span> if it has readability issues.
      */
-    private function wrap_sentence( $sentence ) {
+    private function wrap_sentence( $sentence, $index = 0 ) {
         $trimmed = trim( $sentence );
         if ( $trimmed === '' ) {
             return $sentence;
@@ -368,11 +382,27 @@ class AI_SEO_Readability {
         $lower = mb_strtolower( $trimmed );
         foreach ( self::$passive_markers as $marker ) {
             if ( mb_strpos( $lower, $marker ) !== false ) {
-                if ( preg_match( '/\b(' . implode( '|', self::$passive_markers ) . ')\s+\w+(t|et|dd)\b/u', $lower ) ) {
+                if ( preg_match( '/\b(' . implode( '|', self::$passive_markers ) . ')\s+(\w+(?:t|et|dd))\b/u', $lower, $match ) ) {
                     $classes[] = 'ai-seo-hl-passive';
-                    $tips[]    = 'passiv stemme';
+                    $tips[]    = 'Passiv stemme (' . "\xC2\xAB" . $match[0] . "\xC2\xBB" . ') – omskriv til aktiv form';
                     break;
                 }
+            }
+        }
+
+        // Transition word check (only for sentences with 5+ words).
+        if ( $wc >= 5 ) {
+            $has_transition = false;
+            foreach ( self::$transition_words as $tw ) {
+                if ( mb_strpos( $lower, $tw ) !== false ) {
+                    $has_transition = true;
+                    break;
+                }
+            }
+            if ( ! $has_transition ) {
+                $classes[]    = 'ai-seo-hl-no-transition';
+                $suggestions  = self::$transition_suggestions[ $index % count( self::$transition_suggestions ) ];
+                $tips[]       = 'Mangler overgangsord – prøv: ' . implode( ', ', $suggestions );
             }
         }
 
@@ -380,7 +410,9 @@ class AI_SEO_Readability {
             return esc_html( $sentence );
         }
 
-        return '<span class="' . implode( ' ', $classes ) . '" data-tip="' . esc_attr( implode( ' | ', $tips ) ) . '">'
+        $data_sentence = esc_attr( mb_substr( $trimmed, 0, 100 ) );
+
+        return '<span class="' . implode( ' ', $classes ) . '" data-tip="' . esc_attr( implode( ' | ', $tips ) ) . '" data-sentence="' . $data_sentence . '">'
             . esc_html( $sentence )
             . '</span>';
     }
