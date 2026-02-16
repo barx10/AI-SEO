@@ -479,6 +479,20 @@
         }
 
         // --- Click-to-navigate: scroll to sentence in editor ---
+        var previousHighlightEl = null;
+        var previousHighlightDoc = null;
+
+        function clearPreviousHighlight() {
+            if (previousHighlightEl) {
+                try {
+                    previousHighlightEl.style.outline = '';
+                    previousHighlightEl.style.outlineOffset = '';
+                    previousHighlightEl.style.borderRadius = '';
+                } catch (e) {}
+                previousHighlightEl = null;
+                previousHighlightDoc = null;
+            }
+        }
 
         function initHighlightNavigation() {
             if (!highlightContent) return;
@@ -534,14 +548,12 @@
                     var el = node.parentElement;
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+                    clearPreviousHighlight();
                     el.style.outline = '2px solid #2271b1';
                     el.style.outlineOffset = '2px';
                     el.style.borderRadius = '2px';
-                    setTimeout(function () {
-                        el.style.outline = '';
-                        el.style.outlineOffset = '';
-                        el.style.borderRadius = '';
-                    }, 2000);
+                    previousHighlightEl = el;
+                    previousHighlightDoc = doc;
 
                     return true;
                 }
