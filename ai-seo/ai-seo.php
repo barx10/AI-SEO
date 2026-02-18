@@ -410,6 +410,49 @@ function ai_seo_ajax_refresh_score() {
     wp_send_json_success( $seo_score );
 }
 add_action( 'wp_ajax_ai_seo_refresh_score', 'ai_seo_ajax_refresh_score' );
+/**
+ * AJAX handler: Run AI quality analysis.
+ */
+function ai_seo_ajax_run_ai_quality() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    $post_id       = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $meta_title    = isset( $_POST['seo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_title'] ) ) : '';
+    $meta_desc     = isset( $_POST['seo_description'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_description'] ) ) : '';
+    $force_refresh = isset( $_POST['force_refresh'] ) && $_POST['force_refresh'] === '1';
+
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Innlegget ble ikke funnet.' );
+    }
+
+    // Allow unsaved editor content (same pattern as refresh_score)
+    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    if ( ! empty( $editor_content ) ) {
+        $post->post_content = $editor_content;
+    }
+
+    // Clear cache if user explicitly requested refresh
+    if ( $force_refresh ) {
+        $title     = ! empty( $meta_title ) ? $meta_title : $post->post_title;
+        $content   = wp_strip_all_tags( $post->post_content );
+        $cache_key = 'ai_seo_quality_' . $post_id . '_' . md5( $title . $content );
+        delete_transient( $cache_key );
+    }
+
+    $result = AI_SEO_Score::analyze_ai_quality( $post, $meta_title, $meta_desc );
+
+    wp_send_json_success( $result );
+}
+add_action( 'wp_ajax_ai_seo_run_ai_quality', 'ai_seo_ajax_run_ai_quality' );
 
 /**
  * AJAX handler: Readability highlight.
