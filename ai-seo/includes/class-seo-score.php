@@ -534,7 +534,7 @@ class AI_SEO_Score {
         $sentences      = preg_split( '/[.!?]+/', $content, -1, PREG_SPLIT_NO_EMPTY );
         $sentence_count = max( 1, count( $sentences ) );
         $word_count     = max( 1, str_word_count( $content ) );
-        $syllables      = preg_match_all( '/[aeiouy]+/i', $content );
+        $syllables      = preg_match_all( '/[aeiouyæøå]+/iu', $content );
         $flesch         = 206.835 - ( 1.015 * ( $word_count / $sentence_count ) ) - ( 84.6 * ( $syllables / $word_count ) );
         $flesch         = max( 0, min( 100, $flesch ) );
 
