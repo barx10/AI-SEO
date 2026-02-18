@@ -181,6 +181,11 @@ class AI_SEO_Meta_Box {
                     <button type="button" class="button button-small" id="ai-seo-refresh-score" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-left:10px;">
                         Oppdater analyse
                     </button>
+                <button type="button" id="ai-seo-run-ai-quality" class="button">
+                    Kjør AI-analyse
+                </button>
+                <span id="ai-quality-spinner" style="display:none;"> ⏳ Analyserer…</span>
+                <div id="ai-seo-quality-results" style="margin-top:10px;"></div>
                 </h4>
                 <div class="ai-seo-readability-score ai-seo-score-<?php echo esc_attr( $seo_score['rating'] ); ?>" id="ai-seo-score-badge">
                     <strong>SEO-score: <span id="ai-seo-score-value"><?php echo esc_html( $seo_score['score'] ); ?></span>/100</strong>
