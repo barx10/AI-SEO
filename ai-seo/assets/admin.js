@@ -851,11 +851,15 @@
                 params.append( 'post_content',     editorContent );
                 params.append( 'force_refresh',    '1' );
 
-                aiQualityResults.innerHTML = '<p>\u23f3 Henter ny analyse\u2026</p>';
+                aiQualityBtn.disabled          = true;
+                aiQualitySpinner.style.display = 'inline';
+                aiQualityResults.innerHTML     = '';
 
                 fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
                     .then( function ( r ) { return r.json(); } )
                     .then( function ( d ) {
+                        aiQualityBtn.disabled          = false;
+                        aiQualitySpinner.style.display = 'none';
                         if ( d.success ) {
                             renderAiQualityResults( d.data );
                         } else {
@@ -863,6 +867,8 @@
                         }
                     } )
                     .catch( function () {
+                        aiQualityBtn.disabled          = false;
+                        aiQualitySpinner.style.display = 'none';
                         aiQualityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
                     } );
             } );
