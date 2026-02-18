@@ -746,5 +746,128 @@
             });
             el.style.cursor = 'pointer';
         });
+
+    // AI Quality Analysis
+    const aiQualityBtn     = document.getElementById( 'ai-seo-run-ai-quality' );
+    const aiQualitySpinner = document.getElementById( 'ai-quality-spinner' );
+    const aiQualityResults = document.getElementById( 'ai-seo-quality-results' );
+
+    if ( aiQualityBtn ) {
+        aiQualityBtn.addEventListener( 'click', function () {
+            const postId   = document.getElementById( 'post_ID' ) ? document.getElementById( 'post_ID' ).value : '';
+            const seoTitle = document.getElementById( 'ai_seo_meta_title' ) ? document.getElementById( 'ai_seo_meta_title' ).value : '';
+            const seoDesc  = document.getElementById( 'ai_seo_meta_description' ) ? document.getElementById( 'ai_seo_meta_description' ).value : '';
+
+            // Get editor content (Gutenberg or Classic Editor)
+            let editorContent = '';
+            if ( typeof wp !== 'undefined' && wp.data && wp.data.select( 'core/editor' ) ) {
+                editorContent = wp.data.select( 'core/editor' ).getEditedPostContent() || '';
+            } else if ( document.getElementById( 'content' ) ) {
+                editorContent = document.getElementById( 'content' ).value;
+            }
+
+            aiQualityBtn.disabled        = true;
+            aiQualitySpinner.style.display = 'inline';
+            aiQualityResults.innerHTML   = '';
+
+            const params = new FormData();
+            params.append( 'action',       'ai_seo_run_ai_quality' );
+            params.append( 'nonce',        aiSeo.nonce );
+            params.append( 'post_id',      postId );
+            params.append( 'seo_title',    seoTitle );
+            params.append( 'seo_description', seoDesc );
+            params.append( 'post_content', editorContent );
+
+            fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
+                .then( function ( r ) { return r.json(); } )
+                .then( function ( data ) {
+                    aiQualityBtn.disabled        = false;
+                    aiQualitySpinner.style.display = 'none';
+                    if ( data.success ) {
+                        renderAiQualityResults( data.data );
+                    } else {
+                        aiQualityResults.innerHTML = '<p style="color:red;">Feil: ' + ( data.data || 'Ukjent feil' ) + '</p>';
+                    }
+                } )
+                .catch( function () {
+                    aiQualityBtn.disabled        = false;
+                    aiQualitySpinner.style.display = 'none';
+                    aiQualityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+                } );
+        } );
+    }
+
+    function renderAiQualityResults( data ) {
+        if ( ! aiQualityResults ) { return; }
+        const checks = data.checks || [];
+        const cached = data.cached
+            ? ' <em style="font-size:11px;color:#888;">(fra cache)</em>'
+            : '';
+
+        let html = '<p><strong>AI-kvalitetssjekker</strong>' + cached + '</p>';
+        html += '<ul style="margin:0;padding:0;list-style:none;">';
+
+        checks.forEach( function ( check ) {
+            const icon     = check.pass ? '\u2713' : '\u2717';
+            const color    = check.pass ? 'green' : '#cc0000';
+            const detail   = check.detail
+                ? ' <span style="color:#666;">(' + check.detail + ')</span>'
+                : '';
+            const feedback = check.feedback
+                ? '<br><small style="color:#555;margin-left:22px;">' + check.feedback + '</small>'
+                : '';
+            html += '<li style="padding:3px 0;">'
+                + '<span style="color:' + color + ';font-weight:bold;margin-right:6px;">' + icon + '</span>'
+                + check.label + detail + feedback
+                + '</li>';
+        } );
+
+        html += '</ul>';
+        html += '<p style="margin-top:8px;"><a href="#" id="ai-quality-force-refresh" style="font-size:12px;">Tving ny analyse (t\u00f8m cache)</a></p>';
+
+        aiQualityResults.innerHTML = html;
+
+        const forceRefreshLink = document.getElementById( 'ai-quality-force-refresh' );
+        if ( forceRefreshLink ) {
+            forceRefreshLink.addEventListener( 'click', function ( e ) {
+                e.preventDefault();
+                const postId   = document.getElementById( 'post_ID' ) ? document.getElementById( 'post_ID' ).value : '';
+                const seoTitle = document.getElementById( 'ai_seo_meta_title' ) ? document.getElementById( 'ai_seo_meta_title' ).value : '';
+                const seoDesc  = document.getElementById( 'ai_seo_meta_description' ) ? document.getElementById( 'ai_seo_meta_description' ).value : '';
+
+                let editorContent = '';
+                if ( typeof wp !== 'undefined' && wp.data && wp.data.select( 'core/editor' ) ) {
+                    editorContent = wp.data.select( 'core/editor' ).getEditedPostContent() || '';
+                } else if ( document.getElementById( 'content' ) ) {
+                    editorContent = document.getElementById( 'content' ).value;
+                }
+
+                const params = new FormData();
+                params.append( 'action',          'ai_seo_run_ai_quality' );
+                params.append( 'nonce',            aiSeo.nonce );
+                params.append( 'post_id',          postId );
+                params.append( 'seo_title',        seoTitle );
+                params.append( 'seo_description',  seoDesc );
+                params.append( 'post_content',     editorContent );
+                params.append( 'force_refresh',    '1' );
+
+                aiQualityResults.innerHTML = '<p>\u23f3 Henter ny analyse\u2026</p>';
+
+                fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
+                    .then( function ( r ) { return r.json(); } )
+                    .then( function ( d ) {
+                        if ( d.success ) {
+                            renderAiQualityResults( d.data );
+                        } else {
+                            aiQualityResults.innerHTML = '<p style="color:red;">Feil ved oppdatering.</p>';
+                        }
+                    } )
+                    .catch( function () {
+                        aiQualityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+                    } );
+            } );
+        }
+    }
+
     });
 })();
