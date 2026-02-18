@@ -327,6 +327,14 @@
     color: #1d2327;
 }
 
+.ai-seo-highlight-content .ai-seo-hl-paragraph {
+    margin: 0 0 1em;
+}
+
+.ai-seo-highlight-content .ai-seo-hl-paragraph:last-child {
+    margin-bottom: 0;
+}
+
 .ai-seo-hl-long,
 .ai-seo-hl-passive,
 .ai-seo-hl-no-transition {

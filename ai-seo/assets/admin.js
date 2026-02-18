@@ -538,23 +538,37 @@
             }
         }
 
+        function highlightElement(el, doc) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            clearPreviousHighlight();
+            el.style.outline = '2px solid #2271b1';
+            el.style.outlineOffset = '2px';
+            el.style.borderRadius = '2px';
+            previousHighlightEl = el;
+            previousHighlightDoc = doc;
+        }
+
         function findAndScrollToText(container, searchText, doc) {
-            var walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
-            var node;
             var needle = searchText.toLowerCase();
 
+            // First search block-level elements by their full textContent.
+            // This handles inline formatting (strong, em, a) that splits
+            // text across multiple DOM nodes.
+            var blocks = container.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, td, th, blockquote');
+            for (var i = 0; i < blocks.length; i++) {
+                if (blocks[i].textContent.toLowerCase().indexOf(needle) !== -1) {
+                    highlightElement(blocks[i], doc);
+                    return true;
+                }
+            }
+
+            // Fallback: search individual text nodes.
+            var walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            var node;
             while ((node = walker.nextNode())) {
                 if (node.textContent.toLowerCase().indexOf(needle) !== -1) {
-                    var el = node.parentElement;
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                    clearPreviousHighlight();
-                    el.style.outline = '2px solid #2271b1';
-                    el.style.outlineOffset = '2px';
-                    el.style.borderRadius = '2px';
-                    previousHighlightEl = el;
-                    previousHighlightDoc = doc;
-
+                    highlightElement(node.parentElement, doc);
                     return true;
                 }
             }
