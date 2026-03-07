@@ -8,6 +8,14 @@ class AI_SEO_Settings_Page {
     public function init() {
         add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_media' ) );
+    }
+
+    public function enqueue_media( $hook ) {
+        if ( 'toplevel_page_ai-seo' !== $hook ) {
+            return;
+        }
+        wp_enqueue_media();
     }
 
     public function add_menu_page() {
@@ -56,6 +64,9 @@ class AI_SEO_Settings_Page {
         add_settings_section( 'ai_seo_social_section', 'Sosiale medier', array( $this, 'render_social_section' ), 'ai-seo' );
 
         add_settings_field( 'twitter_handle', 'Twitter / X-brukernavn', array( $this, 'render_twitter_field' ), 'ai-seo', 'ai_seo_social_section' );
+        add_settings_field( 'homepage_og_image_id', 'Forsidebilde (Open Graph)', array( $this, 'render_homepage_og_image_field' ), 'ai-seo', 'ai_seo_social_section' );
+        add_settings_field( 'homepage_og_title', 'Forsidetittel (Open Graph)', array( $this, 'render_homepage_og_title_field' ), 'ai-seo', 'ai_seo_social_section' );
+        add_settings_field( 'homepage_og_description', 'Forsidebeskrivelse (Open Graph)', array( $this, 'render_homepage_og_description_field' ), 'ai-seo', 'ai_seo_social_section' );
 
         // Organization / LocalBusiness section.
         add_settings_section( 'ai_seo_org_section', 'Organisasjon / Bedrift', array( $this, 'render_org_section' ), 'ai-seo' );
@@ -110,6 +121,11 @@ class AI_SEO_Settings_Page {
             $twitter = '@' . $twitter;
         }
         $sanitized['twitter_handle'] = $twitter;
+
+        // Homepage Open Graph.
+        $sanitized['homepage_og_title']       = isset( $input['homepage_og_title'] ) ? sanitize_text_field( $input['homepage_og_title'] ) : '';
+        $sanitized['homepage_og_description'] = isset( $input['homepage_og_description'] ) ? sanitize_textarea_field( $input['homepage_og_description'] ) : '';
+        $sanitized['homepage_og_image_id']    = isset( $input['homepage_og_image_id'] ) ? absint( $input['homepage_og_image_id'] ) : 0;
 
         // Organization.
         $allowed_org_types = array( '', 'Organization', 'LocalBusiness', 'Restaurant', 'Store', 'MedicalBusiness', 'LegalService', 'FinancialService' );
@@ -384,6 +400,79 @@ class AI_SEO_Settings_Page {
                class="regular-text"
                placeholder="@dittbrukernavn" />
         <p class="description">Brukes i Twitter Card-metatagger (<code>twitter:site</code> og <code>twitter:creator</code>).</p>
+        <?php
+    }
+
+    public function render_homepage_og_image_field() {
+        $options   = get_option( 'ai_seo_options', array() );
+        $image_id  = isset( $options['homepage_og_image_id'] ) ? (int) $options['homepage_og_image_id'] : 0;
+        $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'medium' ) : '';
+        ?>
+        <div id="ai-seo-homepage-og-image-wrap">
+            <img src="<?php echo esc_url( $image_url ); ?>"
+                 id="ai-seo-homepage-og-preview"
+                 style="max-width:300px;display:block;margin-bottom:8px;<?php echo $image_url ? '' : 'display:none;'; ?>" />
+            <input type="hidden"
+                   name="ai_seo_options[homepage_og_image_id]"
+                   id="ai-seo-homepage-og-image-id"
+                   value="<?php echo esc_attr( $image_id ); ?>" />
+            <button type="button" class="button" id="ai-seo-homepage-og-select">Velg bilde</button>
+            <button type="button" class="button" id="ai-seo-homepage-og-remove"
+                <?php echo $image_id ? '' : 'style="display:none"'; ?>>Fjern bilde</button>
+        </div>
+        <p class="description">Anbefalt størrelse: 1200×630 px. Vises når forsiden deles i sosiale medier.</p>
+        <script>
+        jQuery(function($) {
+            var frame;
+            $('#ai-seo-homepage-og-select').on('click', function(e) {
+                e.preventDefault();
+                if (frame) { frame.open(); return; }
+                frame = wp.media({
+                    title: 'Velg forsidebilde for sosiale medier',
+                    button: { text: 'Velg bilde' },
+                    multiple: false
+                });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#ai-seo-homepage-og-image-id').val(attachment.id);
+                    $('#ai-seo-homepage-og-preview').attr('src', attachment.url).show();
+                    $('#ai-seo-homepage-og-remove').show();
+                });
+                frame.open();
+            });
+            $('#ai-seo-homepage-og-remove').on('click', function(e) {
+                e.preventDefault();
+                $('#ai-seo-homepage-og-image-id').val('');
+                $('#ai-seo-homepage-og-preview').attr('src', '').hide();
+                $(this).hide();
+            });
+        });
+        </script>
+        <?php
+    }
+
+    public function render_homepage_og_title_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $title   = isset( $options['homepage_og_title'] ) ? $options['homepage_og_title'] : '';
+        ?>
+        <input type="text"
+               name="ai_seo_options[homepage_og_title]"
+               value="<?php echo esc_attr( $title ); ?>"
+               class="regular-text"
+               placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" />
+        <p class="description">Valgfri. Lar du feltet stå tomt brukes nettstedets navn: <em><?php echo esc_html( get_bloginfo( 'name' ) ); ?></em></p>
+        <?php
+    }
+
+    public function render_homepage_og_description_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $desc    = isset( $options['homepage_og_description'] ) ? $options['homepage_og_description'] : '';
+        ?>
+        <textarea name="ai_seo_options[homepage_og_description]"
+                  class="regular-text"
+                  rows="3"
+                  placeholder="<?php echo esc_attr( get_bloginfo( 'description' ) ); ?>"><?php echo esc_textarea( $desc ); ?></textarea>
+        <p class="description">Valgfri. Lar du feltet stå tomt brukes nettstedets slagord: <em><?php echo esc_html( get_bloginfo( 'description' ) ); ?></em></p>
         <?php
     }
 

@@ -73,6 +73,29 @@ class AI_SEO_Meta_Handler {
             return;
         }
 
+        if ( is_front_page() ) {
+            $og_title = ! empty( $options['homepage_og_title'] ) ? $options['homepage_og_title'] : get_bloginfo( 'name' );
+            $og_desc  = ! empty( $options['homepage_og_description'] ) ? $options['homepage_og_description'] : get_bloginfo( 'description' );
+
+            echo '<meta property="og:title" content="' . esc_attr( $og_title ) . '" />' . "\n";
+            echo '<meta property="og:description" content="' . esc_attr( $og_desc ) . '" />' . "\n";
+            echo '<meta property="og:url" content="' . esc_url( home_url( '/' ) ) . '" />' . "\n";
+            echo '<meta property="og:type" content="website" />' . "\n";
+            echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '" />' . "\n";
+            echo '<meta property="og:locale" content="' . esc_attr( get_locale() ) . '" />' . "\n";
+
+            $image_id = ! empty( $options['homepage_og_image_id'] ) ? (int) $options['homepage_og_image_id'] : 0;
+            if ( $image_id ) {
+                $image_data = wp_get_attachment_image_src( $image_id, 'large' );
+                if ( $image_data ) {
+                    echo '<meta property="og:image" content="' . esc_url( $image_data[0] ) . '" />' . "\n";
+                    echo '<meta property="og:image:width" content="' . esc_attr( $image_data[1] ) . '" />' . "\n";
+                    echo '<meta property="og:image:height" content="' . esc_attr( $image_data[2] ) . '" />' . "\n";
+                }
+            }
+            return;
+        }
+
         if ( ! is_singular() ) {
             return;
         }
@@ -133,6 +156,30 @@ class AI_SEO_Meta_Handler {
     public function output_twitter_card() {
         $options = get_option( 'ai_seo_options', array() );
         if ( isset( $options['enable_opengraph'] ) && ! $options['enable_opengraph'] ) {
+            return;
+        }
+
+        if ( is_front_page() ) {
+            $og_title = ! empty( $options['homepage_og_title'] ) ? $options['homepage_og_title'] : get_bloginfo( 'name' );
+            $og_desc  = ! empty( $options['homepage_og_description'] ) ? $options['homepage_og_description'] : get_bloginfo( 'description' );
+            $image_id = ! empty( $options['homepage_og_image_id'] ) ? (int) $options['homepage_og_image_id'] : 0;
+
+            $card_type = $image_id ? 'summary_large_image' : 'summary';
+            echo '<meta name="twitter:card" content="' . esc_attr( $card_type ) . '" />' . "\n";
+            echo '<meta name="twitter:title" content="' . esc_attr( $og_title ) . '" />' . "\n";
+            echo '<meta name="twitter:description" content="' . esc_attr( $og_desc ) . '" />' . "\n";
+
+            $twitter_handle = isset( $options['twitter_handle'] ) ? $options['twitter_handle'] : '';
+            if ( ! empty( $twitter_handle ) ) {
+                echo '<meta name="twitter:site" content="' . esc_attr( $twitter_handle ) . '" />' . "\n";
+            }
+
+            if ( $image_id ) {
+                $image_url = wp_get_attachment_image_url( $image_id, 'large' );
+                if ( $image_url ) {
+                    echo '<meta name="twitter:image" content="' . esc_url( $image_url ) . '" />' . "\n";
+                }
+            }
             return;
         }
 
