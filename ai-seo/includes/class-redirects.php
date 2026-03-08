@@ -9,6 +9,7 @@ class AI_SEO_Redirects {
 
     public function init() {
         add_action( 'template_redirect', array( $this, 'handle_redirect' ), 1 );
+        add_action( 'post_updated', array( $this, 'maybe_create_redirect_on_slug_change' ), 10, 3 );
     }
 
     /**
@@ -62,6 +63,46 @@ class AI_SEO_Redirects {
         $type = in_array( (int) $redirect->type, array( 301, 302 ), true ) ? (int) $redirect->type : 301;
         wp_redirect( $redirect->target_url, $type );
         exit;
+    }
+
+    /**
+     * Automatically create a redirect when a published post's slug changes.
+     *
+     * @param int     $post_id     Post ID.
+     * @param WP_Post $post_after  Post object after update.
+     * @param WP_Post $post_before Post object before update.
+     */
+    public function maybe_create_redirect_on_slug_change( $post_id, $post_after, $post_before ) {
+        // Only act on previously-published posts.
+        if ( 'publish' !== $post_before->post_status ) {
+            return;
+        }
+
+        // Only act when the slug has actually changed.
+        if ( $post_before->post_name === $post_after->post_name ) {
+            return;
+        }
+
+        // Only act on publicly-viewable post types.
+        if ( ! is_post_type_viewable( $post_before->post_type ) ) {
+            return;
+        }
+
+        // Build old permalink by temporarily using the old slug.
+        $old_post            = clone $post_before;
+        $old_post->post_name = $post_before->post_name;
+        $old_post->filter    = 'raw';
+        $old_url             = get_permalink( $old_post );
+
+        if ( ! $old_url ) {
+            return;
+        }
+
+        $new_url  = get_permalink( $post_id );
+        $old_path = '/' . ltrim( wp_parse_url( $old_url, PHP_URL_PATH ), '/' );
+
+        // add() handles duplicate source gracefully (returns WP_Error, ignored here).
+        self::add( $old_path, $new_url, 301 );
     }
 
     /**
