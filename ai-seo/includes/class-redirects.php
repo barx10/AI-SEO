@@ -98,7 +98,10 @@ class AI_SEO_Redirects {
             return;
         }
 
-        $new_url  = get_permalink( $post_id );
+        $new_url = get_permalink( $post_id );
+        if ( ! $new_url ) {
+            return;
+        }
         $old_path = '/' . ltrim( wp_parse_url( $old_url, PHP_URL_PATH ), '/' );
 
         // add() handles duplicate source gracefully (returns WP_Error, ignored here).
