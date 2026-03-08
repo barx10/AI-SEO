@@ -89,9 +89,8 @@ class AI_SEO_Redirects {
         }
 
         // Build old permalink by temporarily using the old slug.
-        $old_post            = clone $post_before;
-        $old_post->post_name = $post_before->post_name;
-        $old_post->filter    = 'raw';
+        $old_post         = clone $post_before;
+        $old_post->filter = 'raw';
         $old_url             = get_permalink( $old_post );
 
         if ( ! $old_url ) {
