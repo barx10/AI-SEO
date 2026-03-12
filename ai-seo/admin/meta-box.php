@@ -34,8 +34,14 @@ class AI_SEO_Meta_Box {
         $focus_keyword    = get_post_meta( $post->ID, '_ai_seo_focus_keyword', true );
         $robots_meta      = get_post_meta( $post->ID, '_ai_seo_robots_meta', true );
         $cornerstone      = get_post_meta( $post->ID, '_ai_seo_cornerstone', true );
-        $schema_type      = get_post_meta( $post->ID, '_ai_seo_schema_type', true );
-        $social_image_id  = get_post_meta( $post->ID, '_ai_seo_social_image_id', true );
+        $schema_type          = get_post_meta( $post->ID, '_ai_seo_schema_type', true );
+        $social_image_id      = get_post_meta( $post->ID, '_ai_seo_social_image_id', true );
+        $video_embed_url      = get_post_meta( $post->ID, '_ai_seo_video_embed_url', true );
+        $video_name           = get_post_meta( $post->ID, '_ai_seo_video_name', true );
+        $video_description    = get_post_meta( $post->ID, '_ai_seo_video_description', true );
+        $video_thumbnail_url  = get_post_meta( $post->ID, '_ai_seo_video_thumbnail_url', true );
+        $video_upload_date    = get_post_meta( $post->ID, '_ai_seo_video_upload_date', true );
+        $video_duration       = get_post_meta( $post->ID, '_ai_seo_video_duration', true );
 
         if ( ! is_array( $robots_meta ) ) {
             $robots_meta = array();
@@ -139,6 +145,54 @@ class AI_SEO_Meta_Box {
                     <option value="howto" <?php selected( $schema_type, 'howto' ); ?>>HowTo (bruker H3 som steg)</option>
                 </select>
             </div>
+
+            <!-- Video Schema -->
+            <div class="ai-seo-field">
+                <label for="ai_seo_video_embed_url"><strong>Video – innbyggingslenke (Vimeo/YouTube)</strong></label>
+                <input type="url"
+                       id="ai_seo_video_embed_url"
+                       name="ai_seo_video_embed_url"
+                       value="<?php echo esc_attr( $video_embed_url ); ?>"
+                       class="large-text"
+                       placeholder="https://player.vimeo.com/video/123456789" />
+                <p class="description">Legg inn embed-URL for å aktivere VideoObject-skjema. Eks: <code>https://player.vimeo.com/video/123456789</code></p>
+            </div>
+            <div id="ai-seo-video-fields" <?php echo $video_embed_url ? '' : 'style="display:none;"'; ?>>
+                <div class="ai-seo-field">
+                    <label for="ai_seo_video_name">Videotittel <span class="description">(valgfri – bruker SEO-tittel hvis tom)</span></label>
+                    <input type="text" id="ai_seo_video_name" name="ai_seo_video_name"
+                           value="<?php echo esc_attr( $video_name ); ?>" class="large-text" />
+                </div>
+                <div class="ai-seo-field">
+                    <label for="ai_seo_video_description">Videobeskrivelse <span class="description">(valgfri – bruker metabeskrivelse hvis tom)</span></label>
+                    <textarea id="ai_seo_video_description" name="ai_seo_video_description"
+                              class="large-text" rows="2"><?php echo esc_textarea( $video_description ); ?></textarea>
+                </div>
+                <div class="ai-seo-field">
+                    <label for="ai_seo_video_thumbnail_url">Miniatyrbilde-URL</label>
+                    <input type="url" id="ai_seo_video_thumbnail_url" name="ai_seo_video_thumbnail_url"
+                           value="<?php echo esc_attr( $video_thumbnail_url ); ?>" class="large-text"
+                           placeholder="https://i.vimeocdn.com/video/..." />
+                    <p class="description">Direkte URL til videominiatyrbilde. Anbefalt: 1280×720 piksler.</p>
+                </div>
+                <div class="ai-seo-field">
+                    <label for="ai_seo_video_upload_date">Opplastingsdato</label>
+                    <input type="date" id="ai_seo_video_upload_date" name="ai_seo_video_upload_date"
+                           value="<?php echo esc_attr( $video_upload_date ); ?>" />
+                </div>
+                <div class="ai-seo-field">
+                    <label for="ai_seo_video_duration">Varighet (ISO 8601)</label>
+                    <input type="text" id="ai_seo_video_duration" name="ai_seo_video_duration"
+                           value="<?php echo esc_attr( $video_duration ); ?>" class="regular-text"
+                           placeholder="PT1M30S" />
+                    <p class="description">Format: <code>PT[m]M[s]S</code>. Eks: 1 min 30 sek = <code>PT1M30S</code></p>
+                </div>
+            </div>
+            <script>
+            document.getElementById('ai_seo_video_embed_url').addEventListener('input', function() {
+                document.getElementById('ai-seo-video-fields').style.display = this.value ? '' : 'none';
+            });
+            </script>
 
             <!-- Social Image -->
             <div class="ai-seo-field">
@@ -369,6 +423,27 @@ class AI_SEO_Meta_Box {
             $type = sanitize_text_field( $_POST['ai_seo_schema_type'] );
             if ( in_array( $type, $allowed_types, true ) ) {
                 update_post_meta( $post_id, '_ai_seo_schema_type', $type );
+            }
+        }
+
+        // Video Schema-felter.
+        $video_fields = array(
+            'ai_seo_video_embed_url'     => '_ai_seo_video_embed_url',
+            'ai_seo_video_name'          => '_ai_seo_video_name',
+            'ai_seo_video_description'   => '_ai_seo_video_description',
+            'ai_seo_video_thumbnail_url' => '_ai_seo_video_thumbnail_url',
+            'ai_seo_video_upload_date'   => '_ai_seo_video_upload_date',
+            'ai_seo_video_duration'      => '_ai_seo_video_duration',
+        );
+
+        foreach ( $video_fields as $field_name => $meta_key ) {
+            if ( isset( $_POST[ $field_name ] ) ) {
+                $value = sanitize_text_field( wp_unslash( $_POST[ $field_name ] ) );
+                if ( $value ) {
+                    update_post_meta( $post_id, $meta_key, $value );
+                } else {
+                    delete_post_meta( $post_id, $meta_key );
+                }
             }
         }
 
