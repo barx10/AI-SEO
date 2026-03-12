@@ -40,6 +40,8 @@ class AI_SEO_Schema {
         if ( 'post' === $post->post_type ) {
             $this->output_article_schema( $post );
         }
+
+        $this->output_video_schema( $post );
     }
 
     private function output_article_schema( $post ) {
@@ -175,6 +177,54 @@ class AI_SEO_Schema {
         if ( ! empty( $schema['step'] ) ) {
             $this->render_json_ld( $schema );
         }
+    }
+
+    private function output_video_schema( $post ) {
+        $post_id   = $post->ID;
+        $embed_url = get_post_meta( $post_id, '_ai_seo_video_embed_url', true );
+
+        if ( empty( $embed_url ) ) {
+            return;
+        }
+
+        $meta_title       = get_post_meta( $post_id, '_ai_seo_meta_title', true );
+        $meta_description = get_post_meta( $post_id, '_ai_seo_meta_description', true );
+        $video_name       = get_post_meta( $post_id, '_ai_seo_video_name', true );
+        $video_desc       = get_post_meta( $post_id, '_ai_seo_video_description', true );
+        $thumbnail        = get_post_meta( $post_id, '_ai_seo_video_thumbnail_url', true );
+        $upload_date      = get_post_meta( $post_id, '_ai_seo_video_upload_date', true );
+        $duration         = get_post_meta( $post_id, '_ai_seo_video_duration', true );
+
+        $name = $video_name
+            ? $video_name
+            : ( $meta_title ? $meta_title : get_the_title( $post_id ) );
+
+        $description = $video_desc
+            ? $video_desc
+            : ( $meta_description ? $meta_description : wp_trim_words( wp_strip_all_tags( $post->post_content ), 30, '...' ) );
+
+        $schema = array(
+            '@context'    => 'https://schema.org',
+            '@type'       => 'VideoObject',
+            'name'        => $name,
+            'description' => $description,
+            'embedUrl'    => esc_url_raw( $embed_url ),
+            'url'         => get_permalink( $post_id ),
+        );
+
+        if ( $thumbnail ) {
+            $schema['thumbnailUrl'] = esc_url_raw( $thumbnail );
+        }
+
+        if ( $upload_date ) {
+            $schema['uploadDate'] = sanitize_text_field( $upload_date );
+        }
+
+        if ( $duration ) {
+            $schema['duration'] = sanitize_text_field( $duration );
+        }
+
+        $this->render_json_ld( $schema );
     }
 
     public function output_organization_schema() {
