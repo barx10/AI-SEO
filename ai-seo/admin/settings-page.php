@@ -91,6 +91,7 @@ class AI_SEO_Settings_Page {
             'gpt-4o',
             'gemini-3-flash-preview',
             'gemini-2.5-flash',
+            'gemini-3.1-flash-lite-preview',
         );
         $sanitized['ai_model'] = isset( $input['ai_model'] ) && in_array( $input['ai_model'], $allowed_models, true )
             ? $input['ai_model']
@@ -302,6 +303,7 @@ class AI_SEO_Settings_Page {
             <optgroup label="Google" class="ai-seo-model-group" data-provider="google">
                 <option value="gemini-3-flash-preview" <?php selected( $model, 'gemini-3-flash-preview' ); ?>>Gemini 3 Flash Preview</option>
                 <option value="gemini-2.5-flash" <?php selected( $model, 'gemini-2.5-flash' ); ?>>Gemini 2.5 Flash</option>
+                <option value="gemini-3.1-flash-lite-preview" <?php selected( $model, 'gemini-3.1-flash-lite-preview' ); ?>>Gemini 3.1 Flash Lite Preview</option>
             </optgroup>
         </select>
         <p class="description">Velg modellen som skal brukes for AI-generering.</p>
