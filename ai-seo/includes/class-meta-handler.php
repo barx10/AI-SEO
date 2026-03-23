@@ -133,6 +133,13 @@ class AI_SEO_Meta_Handler {
                 echo '<meta property="og:image:width" content="' . esc_attr( $thumb_data[1] ) . '" />' . "\n";
                 echo '<meta property="og:image:height" content="' . esc_attr( $thumb_data[2] ) . '" />' . "\n";
             }
+        } elseif ( ! empty( $options['homepage_og_image_id'] ) ) {
+            $fallback_data = wp_get_attachment_image_src( (int) $options['homepage_og_image_id'], 'large' );
+            if ( $fallback_data ) {
+                echo '<meta property="og:image" content="' . esc_url( $fallback_data[0] ) . '" />' . "\n";
+                echo '<meta property="og:image:width" content="' . esc_attr( $fallback_data[1] ) . '" />' . "\n";
+                echo '<meta property="og:image:height" content="' . esc_attr( $fallback_data[2] ) . '" />' . "\n";
+            }
         }
 
         if ( 'article' === $og_type ) {
@@ -204,6 +211,9 @@ class AI_SEO_Meta_Handler {
         } elseif ( has_post_thumbnail( $post_id ) ) {
             $has_image = true;
             $image_id  = get_post_thumbnail_id( $post_id );
+        } elseif ( ! empty( $options['homepage_og_image_id'] ) ) {
+            $has_image = true;
+            $image_id  = (int) $options['homepage_og_image_id'];
         }
 
         $card_type = $has_image ? 'summary_large_image' : 'summary';
