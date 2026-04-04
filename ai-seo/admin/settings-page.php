@@ -67,6 +67,7 @@ class AI_SEO_Settings_Page {
         add_settings_field( 'homepage_og_image_id', 'Forsidebilde (Open Graph)', array( $this, 'render_homepage_og_image_field' ), 'ai-seo', 'ai_seo_social_section' );
         add_settings_field( 'homepage_og_title', 'Forsidetittel (Open Graph)', array( $this, 'render_homepage_og_title_field' ), 'ai-seo', 'ai_seo_social_section' );
         add_settings_field( 'homepage_og_description', 'Forsidebeskrivelse (Open Graph)', array( $this, 'render_homepage_og_description_field' ), 'ai-seo', 'ai_seo_social_section' );
+        add_settings_field( 'homepage_meta_description', 'Forside meta-beskrivelse (SEO)', array( $this, 'render_homepage_meta_description_field' ), 'ai-seo', 'ai_seo_social_section' );
 
         // Organization / LocalBusiness section.
         add_settings_section( 'ai_seo_org_section', 'Organisasjon / Bedrift', array( $this, 'render_org_section' ), 'ai-seo' );
@@ -134,6 +135,7 @@ class AI_SEO_Settings_Page {
         $sanitized['homepage_og_title']       = isset( $input['homepage_og_title'] ) ? sanitize_text_field( $input['homepage_og_title'] ) : '';
         $sanitized['homepage_og_description'] = isset( $input['homepage_og_description'] ) ? sanitize_textarea_field( $input['homepage_og_description'] ) : '';
         $sanitized['homepage_og_image_id']    = isset( $input['homepage_og_image_id'] ) ? absint( $input['homepage_og_image_id'] ) : 0;
+        $sanitized['homepage_meta_description'] = isset( $input['homepage_meta_description'] ) ? sanitize_text_field( $input['homepage_meta_description'] ) : '';
 
         // Organization.
         $allowed_org_types = array( '', 'Person', 'Organization', 'LocalBusiness', 'Restaurant', 'Store', 'MedicalBusiness', 'LegalService', 'FinancialService' );
@@ -489,6 +491,20 @@ class AI_SEO_Settings_Page {
                   rows="3"
                   placeholder="<?php echo esc_attr( get_bloginfo( 'description' ) ); ?>"><?php echo esc_textarea( $desc ); ?></textarea>
         <p class="description">Valgfri. Lar du feltet stå tomt brukes nettstedets slagord: <em><?php echo esc_html( get_bloginfo( 'description' ) ); ?></em></p>
+        <?php
+    }
+
+    public function render_homepage_meta_description_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $desc    = isset( $options['homepage_meta_description'] ) ? $options['homepage_meta_description'] : '';
+        ?>
+        <input type="text"
+               name="ai_seo_options[homepage_meta_description]"
+               value="<?php echo esc_attr( $desc ); ?>"
+               class="large-text"
+               maxlength="160"
+               placeholder="<?php echo esc_attr( get_bloginfo( 'description' ) ); ?>" />
+        <p class="description">Vises i Google-søkeresultater. Maks ~155 tegn. Tomt = fallback til OG-beskrivelse, deretter nettstedets slagord.</p>
         <?php
     }
 

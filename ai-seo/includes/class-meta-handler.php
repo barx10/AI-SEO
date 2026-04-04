@@ -14,6 +14,26 @@ class AI_SEO_Meta_Handler {
     }
 
     public function output_meta_tags() {
+        // Front page with "latest posts" is not is_singular().
+        if ( is_front_page() && ! is_singular() ) {
+            $options  = get_option( 'ai_seo_options', array() );
+            $meta_desc = ! empty( $options['homepage_meta_description'] )
+                ? $options['homepage_meta_description']
+                : ( ! empty( $options['homepage_og_description'] ) ? $options['homepage_og_description'] : '' );
+
+            if ( $meta_desc ) {
+                echo '<meta name="description" content="' . esc_attr( $meta_desc ) . '" />' . "\n";
+            }
+
+            $meta_title = ! empty( $options['homepage_og_title'] ) ? $options['homepage_og_title'] : '';
+            if ( $meta_title ) {
+                add_filter( 'pre_get_document_title', function () use ( $meta_title ) {
+                    return $meta_title;
+                } );
+            }
+            return;
+        }
+
         if ( ! is_singular() ) {
             return;
         }
