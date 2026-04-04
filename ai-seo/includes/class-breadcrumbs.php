@@ -166,11 +166,28 @@ class AI_SEO_Breadcrumbs {
      * Output BreadcrumbList JSON-LD schema.
      */
     public function output_schema() {
+        $trail = $this->get_trail();
+
         if ( is_front_page() || is_home() ) {
+            // Output a single-item BreadcrumbList for the homepage.
+            $schema = array(
+                '@context'        => 'https://schema.org',
+                '@type'           => 'BreadcrumbList',
+                'itemListElement' => array(
+                    array(
+                        '@type'    => 'ListItem',
+                        'position' => 1,
+                        'name'     => get_bloginfo( 'name' ),
+                        'item'     => home_url( '/' ),
+                    ),
+                ),
+            );
+
+            echo '<script type="application/ld+json">' . "\n";
+            echo wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT );
+            echo "\n</script>\n";
             return;
         }
-
-        $trail = $this->get_trail();
 
         if ( count( $trail ) <= 1 ) {
             return;

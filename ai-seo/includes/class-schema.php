@@ -106,9 +106,14 @@ class AI_SEO_Schema {
 
         $schema['wordCount'] = str_word_count( wp_strip_all_tags( $post->post_content ) );
 
-        $categories = get_the_category( $post_id );
-        if ( ! empty( $categories ) ) {
-            $schema['keywords'] = implode( ', ', wp_list_pluck( $categories, 'name' ) );
+        $focus_keyword = get_post_meta( $post_id, '_ai_seo_focus_keyword', true );
+        if ( ! empty( $focus_keyword ) ) {
+            $schema['keywords'] = $focus_keyword;
+        } else {
+            $tags = get_the_tags( $post_id );
+            if ( ! empty( $tags ) ) {
+                $schema['keywords'] = implode( ', ', wp_list_pluck( $tags, 'name' ) );
+            }
         }
 
         $this->render_json_ld( $schema );
