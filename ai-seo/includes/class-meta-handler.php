@@ -43,6 +43,15 @@ class AI_SEO_Meta_Handler {
             return;
         }
 
+        if ( is_category() ) {
+            $term = get_queried_object();
+            $desc = term_description( $term->term_id, 'category' );
+            if ( $desc ) {
+                echo '<meta name="description" content="' . esc_attr( wp_strip_all_tags( $desc ) ) . '" />' . "\n";
+            }
+            return;
+        }
+
         if ( ! is_singular() ) {
             return;
         }
