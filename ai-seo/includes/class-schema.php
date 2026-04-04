@@ -228,14 +228,21 @@ class AI_SEO_Schema {
     }
 
     public function output_organization_schema() {
-        if ( ! is_front_page() ) {
-            return;
-        }
-
         $options  = get_option( 'ai_seo_options', array() );
         $org_type = isset( $options['schema_org_type'] ) ? $options['schema_org_type'] : '';
 
         if ( empty( $org_type ) ) {
+            return;
+        }
+
+        // Person schema: output on front page and on the about page.
+        if ( 'Person' === $org_type ) {
+            $this->maybe_output_person_schema( $options );
+            return;
+        }
+
+        // Organization/business schema: front page only.
+        if ( ! is_front_page() ) {
             return;
         }
 
@@ -271,6 +278,75 @@ class AI_SEO_Schema {
                 'streetAddress' => $options['schema_org_address'],
             );
         }
+
+        $this->render_json_ld( $schema );
+    }
+
+    private function maybe_output_person_schema( $options ) {
+        $about_url = ! empty( $options['schema_person_about_url'] )
+            ? $options['schema_person_about_url']
+            : '/om-laererliv/';
+
+        // Resolve relative URL to absolute for comparison.
+        $about_url_absolute = ( strpos( $about_url, 'http' ) === 0 )
+            ? $about_url
+            : home_url( $about_url );
+
+        $is_about_page = is_page() && trailingslashit( get_permalink() ) === trailingslashit( $about_url_absolute );
+
+        if ( ! is_front_page() && ! $is_about_page ) {
+            return;
+        }
+
+        // Build Person object.
+        $person = array(
+            '@type' => 'Person',
+            '@id'   => home_url( '/#person' ),
+        );
+
+        if ( ! empty( $options['schema_person_name'] ) ) {
+            $person['name'] = $options['schema_person_name'];
+        }
+
+        $person['url'] = $about_url_absolute;
+
+        if ( ! empty( $options['schema_person_job_title'] ) ) {
+            $person['jobTitle'] = $options['schema_person_job_title'];
+        }
+        if ( ! empty( $options['schema_person_email'] ) ) {
+            $person['email'] = $options['schema_person_email'];
+        }
+
+        if ( ! empty( $options['schema_person_same_as'] ) ) {
+            $urls = array_filter( array_map( 'trim', explode( "\n", $options['schema_person_same_as'] ) ) );
+            if ( ! empty( $urls ) ) {
+                $person['sameAs'] = array_values( $urls );
+            }
+        }
+
+        // Build WebSite object.
+        $website = array(
+            '@type'       => 'WebSite',
+            '@id'         => home_url( '/#website' ),
+            'name'        => get_bloginfo( 'name' ),
+            'url'         => home_url( '/' ),
+            'inLanguage'  => 'nb-NO',
+            'potentialAction' => array(
+                '@type'       => 'SearchAction',
+                'target'      => home_url( '/?s={search_term_string}' ),
+                'query-input' => 'required name=search_term_string',
+            ),
+        );
+
+        $description = get_bloginfo( 'description' );
+        if ( $description ) {
+            $website['description'] = $description;
+        }
+
+        $schema = array(
+            '@context' => 'https://schema.org',
+            '@graph'   => array( $website, $person ),
+        );
 
         $this->render_json_ld( $schema );
     }

@@ -75,6 +75,13 @@ class AI_SEO_Settings_Page {
         add_settings_field( 'schema_org_phone', 'Telefonnummer', array( $this, 'render_org_phone_field' ), 'ai-seo', 'ai_seo_org_section' );
         add_settings_field( 'schema_org_email', 'E-post', array( $this, 'render_org_email_field' ), 'ai-seo', 'ai_seo_org_section' );
         add_settings_field( 'schema_org_address', 'Adresse', array( $this, 'render_org_address_field' ), 'ai-seo', 'ai_seo_org_section' );
+
+        // Person-specific fields.
+        add_settings_field( 'schema_person_name', 'Navn (Person)', array( $this, 'render_person_name_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_person_job_title', 'Stillingstittel', array( $this, 'render_person_job_title_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_person_email', 'E-post (Person)', array( $this, 'render_person_email_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_person_about_url', 'URL til om-side', array( $this, 'render_person_about_url_field' ), 'ai-seo', 'ai_seo_org_section' );
+        add_settings_field( 'schema_person_same_as', 'sameAs-lenker', array( $this, 'render_person_same_as_field' ), 'ai-seo', 'ai_seo_org_section' );
     }
 
     public function sanitize_options( $input ) {
@@ -129,7 +136,7 @@ class AI_SEO_Settings_Page {
         $sanitized['homepage_og_image_id']    = isset( $input['homepage_og_image_id'] ) ? absint( $input['homepage_og_image_id'] ) : 0;
 
         // Organization.
-        $allowed_org_types = array( '', 'Organization', 'LocalBusiness', 'Restaurant', 'Store', 'MedicalBusiness', 'LegalService', 'FinancialService' );
+        $allowed_org_types = array( '', 'Person', 'Organization', 'LocalBusiness', 'Restaurant', 'Store', 'MedicalBusiness', 'LegalService', 'FinancialService' );
         $sanitized['schema_org_type'] = isset( $input['schema_org_type'] ) && in_array( $input['schema_org_type'], $allowed_org_types, true )
             ? $input['schema_org_type']
             : '';
@@ -137,6 +144,13 @@ class AI_SEO_Settings_Page {
         $sanitized['schema_org_phone']   = isset( $input['schema_org_phone'] ) ? sanitize_text_field( $input['schema_org_phone'] ) : '';
         $sanitized['schema_org_email']   = isset( $input['schema_org_email'] ) ? sanitize_email( $input['schema_org_email'] ) : '';
         $sanitized['schema_org_address'] = isset( $input['schema_org_address'] ) ? sanitize_text_field( $input['schema_org_address'] ) : '';
+
+        // Person-specific fields.
+        $sanitized['schema_person_name']      = isset( $input['schema_person_name'] ) ? sanitize_text_field( $input['schema_person_name'] ) : '';
+        $sanitized['schema_person_job_title'] = isset( $input['schema_person_job_title'] ) ? sanitize_text_field( $input['schema_person_job_title'] ) : '';
+        $sanitized['schema_person_email']     = isset( $input['schema_person_email'] ) ? sanitize_email( $input['schema_person_email'] ) : '';
+        $sanitized['schema_person_about_url'] = isset( $input['schema_person_about_url'] ) ? esc_url_raw( $input['schema_person_about_url'] ) : '';
+        $sanitized['schema_person_same_as']   = isset( $input['schema_person_same_as'] ) ? sanitize_textarea_field( $input['schema_person_same_as'] ) : '';
 
         return $sanitized;
     }
@@ -482,8 +496,9 @@ class AI_SEO_Settings_Page {
         $options  = get_option( 'ai_seo_options', array() );
         $org_type = isset( $options['schema_org_type'] ) ? $options['schema_org_type'] : '';
         ?>
-        <select name="ai_seo_options[schema_org_type]">
+        <select name="ai_seo_options[schema_org_type]" id="ai_seo_org_type">
             <option value="" <?php selected( $org_type, '' ); ?>>Ingen (deaktivert)</option>
+            <option value="Person" <?php selected( $org_type, 'Person' ); ?>>Person</option>
             <option value="Organization" <?php selected( $org_type, 'Organization' ); ?>>Organisasjon</option>
             <option value="LocalBusiness" <?php selected( $org_type, 'LocalBusiness' ); ?>>Lokal bedrift</option>
             <option value="Restaurant" <?php selected( $org_type, 'Restaurant' ); ?>>Restaurant</option>
@@ -493,6 +508,29 @@ class AI_SEO_Settings_Page {
             <option value="FinancialService" <?php selected( $org_type, 'FinancialService' ); ?>>Finanstjeneste</option>
         </select>
         <p class="description">Vises som JSON-LD på forsiden.</p>
+        <script>
+        jQuery(function($) {
+            var $select = $('#ai_seo_org_type');
+            var personFields = ['schema_person_name', 'schema_person_job_title', 'schema_person_email', 'schema_person_about_url', 'schema_person_same_as'];
+            var orgFields = ['schema_org_phone', 'schema_org_email', 'schema_org_address'];
+
+            function toggleFields() {
+                var val = $select.val();
+                var isPerson = val === 'Person';
+                var isOrg = val !== '' && val !== 'Person';
+
+                personFields.forEach(function(id) {
+                    $('tr:has([name="ai_seo_options[' + id + ']"])').toggle(isPerson);
+                });
+                orgFields.forEach(function(id) {
+                    $('tr:has([name="ai_seo_options[' + id + ']"])').toggle(isOrg);
+                });
+            }
+
+            $select.on('change', toggleFields);
+            toggleFields();
+        });
+        </script>
         <?php
     }
 
@@ -517,6 +555,48 @@ class AI_SEO_Settings_Page {
         $address = isset( $options['schema_org_address'] ) ? $options['schema_org_address'] : '';
         ?>
         <input type="text" name="ai_seo_options[schema_org_address]" value="<?php echo esc_attr( $address ); ?>" class="regular-text" placeholder="Storgata 1, 0001 Oslo" />
+        <?php
+    }
+
+    public function render_person_name_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $value   = isset( $options['schema_person_name'] ) ? $options['schema_person_name'] : '';
+        ?>
+        <input type="text" name="ai_seo_options[schema_person_name]" value="<?php echo esc_attr( $value ); ?>" class="regular-text" placeholder="Ola Nordmann" />
+        <?php
+    }
+
+    public function render_person_job_title_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $value   = isset( $options['schema_person_job_title'] ) ? $options['schema_person_job_title'] : '';
+        ?>
+        <input type="text" name="ai_seo_options[schema_person_job_title]" value="<?php echo esc_attr( $value ); ?>" class="regular-text" placeholder="Lektor / Redaktør" />
+        <?php
+    }
+
+    public function render_person_email_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $value   = isset( $options['schema_person_email'] ) ? $options['schema_person_email'] : '';
+        ?>
+        <input type="email" name="ai_seo_options[schema_person_email]" value="<?php echo esc_attr( $value ); ?>" class="regular-text" placeholder="post@eksempel.no" />
+        <?php
+    }
+
+    public function render_person_about_url_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $value   = isset( $options['schema_person_about_url'] ) ? $options['schema_person_about_url'] : '';
+        ?>
+        <input type="text" name="ai_seo_options[schema_person_about_url]" value="<?php echo esc_attr( $value ); ?>" class="regular-text" placeholder="/om-laererliv/" />
+        <p class="description">Relativ eller absolutt URL til om-siden. Standard: <code>/om-laererliv/</code></p>
+        <?php
+    }
+
+    public function render_person_same_as_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $value   = isset( $options['schema_person_same_as'] ) ? $options['schema_person_same_as'] : '';
+        ?>
+        <textarea name="ai_seo_options[schema_person_same_as]" class="regular-text" rows="4" placeholder="https://www.linkedin.com/in/eksempel&#10;https://twitter.com/eksempel"><?php echo esc_textarea( $value ); ?></textarea>
+        <p class="description">En URL per linje. Sosiale profiler og andre relevante lenker.</p>
         <?php
     }
 
