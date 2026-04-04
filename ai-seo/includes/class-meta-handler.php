@@ -11,6 +11,15 @@ class AI_SEO_Meta_Handler {
         add_action( 'wp_head', array( $this, 'output_robots_meta' ), 2 );
         add_action( 'wp_head', array( $this, 'output_opengraph' ), 3 );
         add_action( 'wp_head', array( $this, 'output_twitter_card' ), 4 );
+
+        // Noindex feeds to prevent thin content indexing.
+        add_action( 'template_redirect', array( $this, 'noindex_feeds' ) );
+    }
+
+    public function noindex_feeds() {
+        if ( is_feed() ) {
+            header( 'X-Robots-Tag: noindex, follow', true );
+        }
     }
 
     public function output_meta_tags() {

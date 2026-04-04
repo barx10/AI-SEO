@@ -46,6 +46,13 @@ require_once AI_SEO_PLUGIN_DIR . 'admin/bulk-columns.php';
 ob_end_clean();
 
 /**
+ * Security hardening: remove REST API discovery link and disable XML-RPC.
+ */
+remove_action( 'wp_head', 'rest_output_link_wp_head', 10 );
+remove_action( 'template_redirect', 'rest_output_link_header', 11 );
+add_filter( 'xmlrpc_enabled', '__return_false' );
+
+/**
  * Initialize plugin components.
  */
 function ai_seo_init() {

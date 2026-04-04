@@ -202,9 +202,26 @@ class AI_SEO_Sitemap {
         }
 
         foreach ( $terms as $term ) {
+            // Get the most recently modified post in this term for lastmod.
+            $latest = get_posts( array(
+                'post_type'      => 'any',
+                'post_status'    => 'publish',
+                'posts_per_page' => 1,
+                'orderby'        => 'modified',
+                'order'          => 'DESC',
+                'tax_query'      => array(
+                    array(
+                        'taxonomy' => $taxonomy,
+                        'terms'    => $term->term_id,
+                    ),
+                ),
+            ) );
+
+            $lastmod = ! empty( $latest ) ? get_the_modified_date( 'c', $latest[0] ) : '';
+
             echo $this->build_url_entry(
                 get_term_link( $term ),
-                '',
+                $lastmod,
                 'weekly',
                 '0.5'
             );

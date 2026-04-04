@@ -294,9 +294,9 @@ class AI_SEO_Schema {
 
         $is_about_page = is_page() && trailingslashit( get_permalink() ) === trailingslashit( $about_url_absolute );
 
-        if ( ! is_front_page() && ! $is_about_page ) {
-            return;
-        }
+        // Output full @graph (WebSite + Person) on front page and about page.
+        // On all other pages, output only the Person node for entity recognition.
+        $full_graph = is_front_page() || $is_about_page;
 
         // Build Person object.
         $person = array(
@@ -343,10 +343,17 @@ class AI_SEO_Schema {
             $website['description'] = $description;
         }
 
-        $schema = array(
-            '@context' => 'https://schema.org',
-            '@graph'   => array( $website, $person ),
-        );
+        if ( $full_graph ) {
+            $schema = array(
+                '@context' => 'https://schema.org',
+                '@graph'   => array( $website, $person ),
+            );
+        } else {
+            $schema = array(
+                '@context' => 'https://schema.org',
+                '@graph'   => array( $person ),
+            );
+        }
 
         $this->render_json_ld( $schema );
     }
