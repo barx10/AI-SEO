@@ -63,11 +63,16 @@ class AI_SEO_Meta_Handler {
     }
 
     public function output_canonical() {
-        if ( ! is_singular() ) {
+        remove_action( 'wp_head', 'rel_canonical' );
+
+        if ( is_front_page() ) {
+            echo '<link rel="canonical" href="' . esc_url( home_url( '/' ) ) . '" />' . "\n";
             return;
         }
 
-        remove_action( 'wp_head', 'rel_canonical' );
+        if ( ! is_singular() ) {
+            return;
+        }
 
         $canonical = wp_get_canonical_url();
         if ( $canonical ) {
