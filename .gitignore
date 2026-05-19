@@ -1,0 +1,23 @@
+# WordPress
+wp-config.php
+wp-config-local.php
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Secrets / credentials
+*.pem
+*.key
+secrets.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+vendor/
