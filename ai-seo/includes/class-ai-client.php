@@ -15,6 +15,15 @@ class AI_SEO_Client {
         $this->provider = isset( $options['ai_provider'] ) ? $options['ai_provider'] : 'anthropic';
         $this->model    = isset( $options['ai_model'] ) ? $options['ai_model'] : 'claude-sonnet-4-5-20250929';
         $this->api_key  = AI_SEO_Settings_Page::get_api_key();
+
+        // Migrate deprecated/retired model IDs to their stable replacements so
+        // existing installs keep working without having to re-save settings.
+        $deprecated_models = array(
+            'gemini-3.1-flash-lite-preview' => 'gemini-3.1-flash-lite',
+        );
+        if ( isset( $deprecated_models[ $this->model ] ) ) {
+            $this->model = $deprecated_models[ $this->model ];
+        }
     }
 
     /**
