@@ -306,6 +306,12 @@ class AI_SEO_Settings_Page {
     public function render_model_field() {
         $options = get_option( 'ai_seo_options', array() );
         $model   = isset( $options['ai_model'] ) ? $options['ai_model'] : 'claude-sonnet-4-5-20250929';
+
+        // Map deprecated/retired model IDs to their stable replacements so the
+        // dropdown stays in sync with the model the plugin actually uses.
+        if ( 'gemini-3.1-flash-lite-preview' === $model ) {
+            $model = 'gemini-3.1-flash-lite';
+        }
         ?>
         <select name="ai_seo_options[ai_model]" id="ai_seo_model">
             <optgroup label="Anthropic" class="ai-seo-model-group" data-provider="anthropic">
