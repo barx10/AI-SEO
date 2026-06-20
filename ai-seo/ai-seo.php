@@ -37,11 +37,14 @@ require_once AI_SEO_PLUGIN_DIR . 'includes/class-redirects.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-breadcrumbs.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-dashboard-widget.php';
 require_once AI_SEO_PLUGIN_DIR . 'includes/class-migration.php';
+require_once AI_SEO_PLUGIN_DIR . 'includes/class-llms-txt.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/settings-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/meta-box.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/redirects-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/migration-page.php';
 require_once AI_SEO_PLUGIN_DIR . 'admin/bulk-columns.php';
+require_once AI_SEO_PLUGIN_DIR . 'admin/llms-page.php';
+require_once AI_SEO_PLUGIN_DIR . 'admin/robots-page.php';
 
 ob_end_clean();
 
@@ -84,6 +87,11 @@ function ai_seo_init() {
             $redirects = new AI_SEO_Redirects();
             $redirects->init();
         }
+
+        if ( ! empty( $options['enable_geo'] ) ) {
+            $llms_txt = new AI_SEO_LLMS_Txt();
+            $llms_txt->init();
+        }
     }
 
     // Admin UI hooks (settings, meta box, pages, columns, dashboard).
@@ -105,6 +113,14 @@ function ai_seo_init() {
 
         $bulk_columns = new AI_SEO_Bulk_Columns();
         $bulk_columns->init();
+
+        if ( ! empty( $options['enable_geo'] ) ) {
+            $llms_page = new AI_SEO_LLMS_Page();
+            $llms_page->init();
+
+            $robots_page = new AI_SEO_Robots_Page();
+            $robots_page->init();
+        }
     }
 }
 add_action( 'plugins_loaded', 'ai_seo_init' );
@@ -121,8 +137,9 @@ function ai_seo_enqueue_admin_assets( $hook ) {
     $is_migration  = ( $screen && $screen->id === 'tools_page_ai-seo-migration' );
     $is_list       = ( $hook === 'edit.php' );
     $is_redirects  = ( $screen && $screen->id === 'tools_page_ai-seo-redirects' );
+    $is_geo        = ( $screen && in_array( $screen->id, array( 'tools_page_ai-seo-llms', 'tools_page_ai-seo-robots' ), true ) );
 
-    if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration && ! $is_list && ! $is_redirects ) {
+    if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration && ! $is_list && ! $is_redirects && ! $is_geo ) {
         return;
     }
 
@@ -462,6 +479,54 @@ function ai_seo_ajax_run_ai_quality() {
 add_action( 'wp_ajax_ai_seo_run_ai_quality', 'ai_seo_ajax_run_ai_quality' );
 
 /**
+ * AJAX handler: Citability ("sitatbarhet") analysis.
+ */
+function ai_seo_ajax_citability() {
+    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
+
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( 'Ingen tilgang.' );
+    }
+
+    if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
+        wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
+    }
+
+    $post_id       = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $force_refresh = isset( $_POST['force_refresh'] ) && $_POST['force_refresh'] === '1';
+
+    if ( ! $post_id ) {
+        wp_send_json_error( 'Ugyldig innleggs-ID.' );
+    }
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Innlegget ble ikke funnet.' );
+    }
+
+    // Allow unsaved editor content (same pattern as refresh_score).
+    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    if ( ! empty( $editor_content ) ) {
+        $post->post_content = $editor_content;
+    }
+
+    if ( $force_refresh ) {
+        $content   = wp_strip_all_tags( $post->post_content );
+        $cache_key = 'ai_seo_citability_' . $post_id . '_' . md5( $post->post_title . $content );
+        delete_transient( $cache_key );
+    }
+
+    $result = AI_SEO_Score::analyze_citability( $post );
+
+    if ( isset( $result['error'] ) ) {
+        wp_send_json_error( $result['error'] );
+    }
+
+    wp_send_json_success( $result );
+}
+add_action( 'wp_ajax_ai_seo_citability', 'ai_seo_ajax_citability' );
+
+/**
  * AJAX handler: Readability highlight.
  */
 function ai_seo_ajax_readability_highlight() {
@@ -528,6 +593,9 @@ function ai_seo_activate() {
 
     $sitemap = new AI_SEO_Sitemap();
     $sitemap->init();
+
+    $llms_txt = new AI_SEO_LLMS_Txt();
+    $llms_txt->init();
 
     AI_SEO_Redirects::create_table();
 

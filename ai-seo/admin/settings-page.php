@@ -59,6 +59,7 @@ class AI_SEO_Settings_Page {
         add_settings_field( 'enable_opengraph', 'OpenGraph / Twitter Cards', array( $this, 'render_opengraph_field' ), 'ai-seo', 'ai_seo_modules_section' );
         add_settings_field( 'enable_breadcrumbs', 'Brødsmulesti', array( $this, 'render_breadcrumbs_field' ), 'ai-seo', 'ai_seo_modules_section' );
         add_settings_field( 'enable_redirects', 'Omdirigeringer', array( $this, 'render_redirects_field' ), 'ai-seo', 'ai_seo_modules_section' );
+        add_settings_field( 'enable_geo', 'GEO-optimering', array( $this, 'render_geo_field' ), 'ai-seo', 'ai_seo_modules_section' );
 
         // Social section.
         add_settings_section( 'ai_seo_social_section', 'Sosiale medier', array( $this, 'render_social_section' ), 'ai-seo' );
@@ -123,6 +124,17 @@ class AI_SEO_Settings_Page {
         $sanitized['enable_opengraph']   = ! empty( $input['enable_opengraph'] ) ? 1 : 0;
         $sanitized['enable_breadcrumbs'] = ! empty( $input['enable_breadcrumbs'] ) ? 1 : 0;
         $sanitized['enable_redirects']   = ! empty( $input['enable_redirects'] ) ? 1 : 0;
+        $sanitized['enable_geo']         = ! empty( $input['enable_geo'] ) ? 1 : 0;
+
+        // Preserve manually-edited llms.txt content (saved on its own page).
+        if ( isset( $input['llms_txt_content'] ) ) {
+            $sanitized['llms_txt_content'] = $input['llms_txt_content'];
+        } else {
+            $existing = get_option( 'ai_seo_options', array() );
+            if ( isset( $existing['llms_txt_content'] ) ) {
+                $sanitized['llms_txt_content'] = $existing['llms_txt_content'];
+            }
+        }
 
         // Social.
         $twitter = isset( $input['twitter_handle'] ) ? sanitize_text_field( $input['twitter_handle'] ) : '';
@@ -411,6 +423,23 @@ class AI_SEO_Settings_Page {
             Aktiver omdirigeringsmodul (301/302)
         </label>
         <p class="description">Administrer omdirigeringer under <a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-seo-redirects' ) ); ?>">AI SEO > Omdirigeringer</a>.</p>
+        <?php
+    }
+
+    public function render_geo_field() {
+        $options = get_option( 'ai_seo_options', array() );
+        $enabled = isset( $options['enable_geo'] ) ? $options['enable_geo'] : 0;
+        ?>
+        <label>
+            <input type="checkbox" name="ai_seo_options[enable_geo]" value="1" <?php checked( $enabled, 1 ); ?> />
+            Aktiver GEO-optimering (generative engine optimization)
+        </label>
+        <p class="description">
+            Verktøy for KI-synlighet:
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-seo-llms' ) ); ?>">llms.txt</a> og
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-seo-robots' ) ); ?>">KI-robot-analyse</a>.
+            Gir også sitatbarhet-skåring i innleggsredigeringen.
+        </p>
         <?php
     }
 
