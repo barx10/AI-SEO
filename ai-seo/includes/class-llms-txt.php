@@ -115,10 +115,22 @@ class AI_SEO_LLMS_Txt {
      * Short single-line excerpt for an item.
      */
     private static function get_excerpt( $post ) {
-        $text = has_excerpt( $post->ID )
-            ? $post->post_excerpt
-            : wp_trim_words( wp_strip_all_tags( $post->post_content ), 25, '' );
-        $text = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $text ) ) );
-        return $text;
+        $raw = has_excerpt( $post->ID ) ? $post->post_excerpt : $post->post_content;
+
+        // Clean up: remove shortcodes, HTML, entities, bare URLs and embeds so
+        // the excerpt reads as a plain, human-friendly summary line.
+        $text = strip_shortcodes( $raw );
+        $text = wp_strip_all_tags( $text );
+        $text = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
+        $text = preg_replace( '#https?://\S+#', '', $text ); // Drop bare URLs (e.g. Spotify links).
+        $text = preg_replace( '/\s+/', ' ', $text );
+        $text = trim( $text );
+
+        if ( '' === $text ) {
+            return '';
+        }
+
+        // Cap length with a proper ellipsis so lines never end mid-word.
+        return wp_trim_words( $text, 30, '…' );
     }
 }
