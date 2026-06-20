@@ -91,6 +91,9 @@ function ai_seo_init() {
         if ( ! empty( $options['enable_geo'] ) ) {
             $llms_txt = new AI_SEO_LLMS_Txt();
             $llms_txt->init();
+
+            // Inject blocked-crawler rules into WordPress' virtual robots.txt.
+            add_filter( 'robots_txt', array( 'AI_SEO_Robots_Page', 'filter_robots_txt' ), 10, 2 );
         }
     }
 
