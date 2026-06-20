@@ -86,7 +86,15 @@ class AI_SEO_LLMS_Txt {
                 $cats = get_the_category( $item->ID );
                 $row  = self::build_row( $item );
                 if ( ! empty( $cats ) ) {
-                    // Use the primary (first) category, same as the breadcrumbs.
+                    // Group under the most specific category (fewest posts
+                    // site-wide), so broad channel categories like "Publisert
+                    // i mediene" don't swallow posts that have a topical one.
+                    usort( $cats, function ( $a, $b ) {
+                        if ( $a->count === $b->count ) {
+                            return strcmp( $a->name, $b->name );
+                        }
+                        return $a->count - $b->count;
+                    } );
                     $groups[ $cats[0]->name ][] = $row;
                 } else {
                     $other[] = $row;
