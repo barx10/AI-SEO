@@ -947,20 +947,22 @@
             ? ' <em style="font-size:11px;color:#888;">(fra cache)</em>'
             : '';
 
+        const ratingLabels = { good: 'God sitatbarhet', ok: 'Middels sitatbarhet', poor: 'Lav sitatbarhet' };
+        const ratingText   = ratingLabels[ rating ] ? ' — ' + ratingLabels[ rating ] : '';
+
         let html = '<div class="ai-seo-readability-score ai-seo-score-' + rating + '">'
-            + '<strong>Sitatbarhet: ' + ( data.score || 0 ) + '/100</strong>' + cached
+            + '<strong>Sitatbarhet: ' + ( data.score || 0 ) + '/100</strong>' + ratingText + cached
             + '</div>';
         html += '<ul class="ai-seo-checklist">';
         checks.forEach( function ( check ) {
-            const icon     = check.pass ? '✓' : '✗';
-            const feedback = check.feedback
-                ? ' <span class="ai-seo-check-detail">' + check.feedback + '</span>'
-                : '';
-            html += '<li class="ai-seo-check-' + ( check.pass ? 'pass' : 'fail' ) + '">'
-                + '<span class="ai-seo-check-icon">' + icon + '</span> '
-                + check.label
-                + ' <span class="ai-seo-check-detail">(' + check.points + '/' + check.weight + ')</span>'
-                + feedback
+            const icon = check.pass ? '✓' : '✗';
+            html += '<li class="ai-seo-check-' + ( check.pass ? 'pass' : 'fail' ) + '" style="display:block;padding:6px 0;">'
+                + '<div style="display:flex;align-items:center;">'
+                +   '<span class="ai-seo-check-icon">' + icon + '</span> '
+                +   '<span>' + check.label + '</span>'
+                +   '<span class="ai-seo-check-detail">' + check.points + '/' + check.weight + '</span>'
+                + '</div>'
+                + ( check.feedback ? '<small style="display:block;color:#555;margin-left:26px;">' + check.feedback + '</small>' : '' )
                 + '</li>';
         } );
         html += '</ul>';
