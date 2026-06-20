@@ -129,6 +129,11 @@ class AI_SEO_Schema {
         $schema = array(
             '@context'   => 'https://schema.org',
             '@type'      => 'FAQPage',
+            // Speakable markup helps voice/AI assistants prioritise the Q&A.
+            'speakable'  => array(
+                '@type'       => 'SpeakableSpecification',
+                'cssSelector' => array( 'h3', '.ai-seo-faq-answer' ),
+            ),
             'mainEntity' => array(),
         );
 

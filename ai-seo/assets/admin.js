@@ -889,5 +889,93 @@
         }
     }
 
+    // --- Citability (GEO) analysis ---
+    const citabilityBtn     = document.getElementById( 'ai-seo-run-citability' );
+    const citabilitySpinner = document.getElementById( 'ai-seo-citability-spinner' );
+    const citabilityResults = document.getElementById( 'ai-seo-citability-results' );
+
+    function runCitability( forceRefresh ) {
+        const postId = document.getElementById( 'post_ID' ) ? document.getElementById( 'post_ID' ).value : '';
+
+        let editorContent = '';
+        if ( typeof wp !== 'undefined' && wp.data && wp.data.select( 'core/editor' ) ) {
+            editorContent = wp.data.select( 'core/editor' ).getEditedPostContent() || '';
+        } else if ( document.getElementById( 'content' ) ) {
+            editorContent = document.getElementById( 'content' ).value;
+        }
+
+        const params = new FormData();
+        params.append( 'action',       'ai_seo_citability' );
+        params.append( 'nonce',        aiSeo.nonce );
+        params.append( 'post_id',      postId );
+        params.append( 'post_content', editorContent );
+        if ( forceRefresh ) {
+            params.append( 'force_refresh', '1' );
+        }
+
+        citabilityBtn.disabled          = true;
+        citabilitySpinner.style.display = 'inline';
+        citabilityResults.innerHTML     = '';
+
+        fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
+            .then( function ( r ) { return r.json(); } )
+            .then( function ( data ) {
+                citabilityBtn.disabled          = false;
+                citabilitySpinner.style.display = 'none';
+                if ( data.success ) {
+                    renderCitabilityResults( data.data );
+                } else {
+                    citabilityResults.innerHTML = '<p style="color:red;">Feil: ' + ( data.data || 'Ukjent feil' ) + '</p>';
+                }
+            } )
+            .catch( function () {
+                citabilityBtn.disabled          = false;
+                citabilitySpinner.style.display = 'none';
+                citabilityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+            } );
+    }
+
+    if ( citabilityBtn ) {
+        citabilityBtn.addEventListener( 'click', function () { runCitability( false ); } );
+    }
+
+    function renderCitabilityResults( data ) {
+        if ( ! citabilityResults ) { return; }
+        const checks = data.checks || [];
+        const rating = data.rating || 'none';
+        const cached = data.cached
+            ? ' <em style="font-size:11px;color:#888;">(fra cache)</em>'
+            : '';
+
+        let html = '<div class="ai-seo-readability-score ai-seo-score-' + rating + '">'
+            + '<strong>Sitatbarhet: ' + ( data.score || 0 ) + '/100</strong>' + cached
+            + '</div>';
+        html += '<ul class="ai-seo-checklist">';
+        checks.forEach( function ( check ) {
+            const icon     = check.pass ? '✓' : '✗';
+            const feedback = check.feedback
+                ? ' <span class="ai-seo-check-detail">' + check.feedback + '</span>'
+                : '';
+            html += '<li class="ai-seo-check-' + ( check.pass ? 'pass' : 'fail' ) + '">'
+                + '<span class="ai-seo-check-icon">' + icon + '</span> '
+                + check.label
+                + ' <span class="ai-seo-check-detail">(' + check.points + '/' + check.weight + ')</span>'
+                + feedback
+                + '</li>';
+        } );
+        html += '</ul>';
+        html += '<p style="margin-top:8px;"><a href="#" id="ai-seo-citability-refresh" style="font-size:12px;">Tving ny analyse (tøm cache)</a></p>';
+
+        citabilityResults.innerHTML = html;
+
+        const refreshLink = document.getElementById( 'ai-seo-citability-refresh' );
+        if ( refreshLink ) {
+            refreshLink.addEventListener( 'click', function ( e ) {
+                e.preventDefault();
+                runCitability( true );
+            } );
+        }
+    }
+
     });
 })();

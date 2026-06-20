@@ -310,6 +310,24 @@ class AI_SEO_Meta_Box {
                 <?php endif; ?>
             </div>
 
+            <?php
+            $geo_options = get_option( 'ai_seo_options', array() );
+            if ( ! empty( $geo_options['enable_geo'] ) ) :
+            ?>
+            <!-- Citability (GEO) -->
+            <div class="ai-seo-citability">
+                <h4>
+                    Sitatbarhet (GEO)
+                    <button type="button" class="button button-small" id="ai-seo-run-citability" data-post-id="<?php echo esc_attr( $post->ID ); ?>" style="margin-left:10px;">
+                        Kjør sitatbarhet-analyse
+                    </button>
+                    <span id="ai-seo-citability-spinner" style="display:none;"> ⏳ Analyserer…</span>
+                </h4>
+                <p class="description">Hvor lett innholdet kan oppdages og siteres av KI-assistenter. Atskilt fra SEO-scoren.</p>
+                <div id="ai-seo-citability-results"></div>
+            </div>
+            <?php endif; ?>
+
             <!-- AI Actions -->
             <div class="ai-seo-ai-actions">
                 <h4>AI-verktøy</h4>

@@ -345,6 +345,100 @@ class AI_SEO_Score {
     }
 
     /**
+     * AI-assisted citability ("sitatbarhet") score for generative engines.
+     *
+     * One AI call evaluates six weighted checks and returns awarded points per
+     * check.  Result is cached for 7 days (same pattern as analyze_ai_quality).
+     *
+     * @return array ['score' => int, 'rating' => string, 'checks' => array, 'cached' => bool]
+     */
+    public static function analyze_citability( $post ) {
+        // The six checks and their maximum weights (sum = 100).
+        $definitions = array(
+            'facts_sources'  => array( 'weight' => 20, 'label' => 'Faktapåstander med kilder/lenker' ),
+            'author_expert'  => array( 'weight' => 15, 'label' => 'Tydelig forfatter med ekspertisesignal' ),
+            'defined_terms'  => array( 'weight' => 15, 'label' => 'Bruker definerte begreper (forklarende setninger)' ),
+            'question_heads' => array( 'weight' => 15, 'label' => 'Overskrifter som er spørsmål eller påstander' ),
+            'unique_data'    => array( 'weight' => 20, 'label' => 'Unike data, tall eller lister' ),
+            'eeat_signals'   => array( 'weight' => 15, 'label' => 'E-E-A-T-signal: dato, forfatter, organisasjon synlig' ),
+        );
+
+        $content   = wp_strip_all_tags( $post->post_content );
+        $cache_key = 'ai_seo_citability_' . $post->ID . '_' . md5( $post->post_title . $content );
+        $cached    = get_transient( $cache_key );
+        if ( false !== $cached && is_array( $cached ) ) {
+            $cached['cached'] = true;
+            return $cached;
+        }
+
+        // Give the AI clean HTML (so it can see links/headings/lists) plus the
+        // visible E-E-A-T metadata.
+        $html_sample = mb_substr( $post->post_content, 0, 4000, 'UTF-8' );
+        $html_sample = preg_replace( '/<!--\s*\/?wp:[^>]*-->\s*/', '', $html_sample );
+        $author      = get_the_author_meta( 'display_name', $post->post_author );
+        $org         = get_bloginfo( 'name' );
+        $date        = get_the_date( 'Y-m-d', $post->ID );
+
+        $prompt  = "Du vurderer hvor «siterbar» en artikkel er for KI-assistenter (GEO – generative engine optimization). ";
+        $prompt .= "Gi en poengsum (heltall) for hver av de seks kontrollene under, fra 0 til maks-vekten i parentes. Vær konkret og streng, men rettferdig.\n\n";
+        $prompt .= "1. facts_sources (maks 20): Inneholder faktapåstander underbygget med kilder eller lenker.\n";
+        $prompt .= "2. author_expert (maks 15): Tydelig forfatter med ekspertisesignal.\n";
+        $prompt .= "3. defined_terms (maks 15): Forklarer/definerer sentrale begreper i klare setninger.\n";
+        $prompt .= "4. question_heads (maks 15): Overskrifter formulert som spørsmål eller tydelige påstander.\n";
+        $prompt .= "5. unique_data (maks 20): Inneholder unike data, tall eller lister.\n";
+        $prompt .= "6. eeat_signals (maks 15): Synlige E-E-A-T-signaler (dato, forfatter, organisasjon).\n\n";
+        $prompt .= "Metadata — Forfatter: {$author}; Organisasjon: {$org}; Dato: {$date}.\n\n";
+        $prompt .= "HTML-innhold:\n{$html_sample}\n\n";
+        $prompt .= 'Svar KUN med JSON på formen {"facts_sources":{"points":X,"feedback":"..."},"author_expert":{"points":X,"feedback":"..."},"defined_terms":{"points":X,"feedback":"..."},"question_heads":{"points":X,"feedback":"..."},"unique_data":{"points":X,"feedback":"..."},"eeat_signals":{"points":X,"feedback":"..."}}. Feedback på norsk, maks 1 kort setning.';
+
+        $client   = new AI_SEO_Client();
+        $response = $client->send_request( $prompt );
+
+        if ( is_wp_error( $response ) ) {
+            return array( 'score' => 0, 'rating' => 'none', 'checks' => array(), 'cached' => false, 'error' => $response->get_error_message() );
+        }
+
+        $parsed = self::parse_ai_json( $response );
+        if ( ! is_array( $parsed ) ) {
+            $parsed = array();
+        }
+
+        $checks = array();
+        $total  = 0;
+        foreach ( $definitions as $id => $def ) {
+            $points = isset( $parsed[ $id ]['points'] ) ? (int) $parsed[ $id ]['points'] : 0;
+            $points = max( 0, min( $def['weight'], $points ) );
+            $total += $points;
+            $checks[] = array(
+                'id'       => $id,
+                'label'    => $def['label'],
+                'points'   => $points,
+                'weight'   => $def['weight'],
+                'pass'     => $points >= ( $def['weight'] * 0.6 ),
+                'feedback' => isset( $parsed[ $id ]['feedback'] ) ? self::format_feedback( $parsed[ $id ]['feedback'] ) : '',
+            );
+        }
+
+        $rating = 'poor';
+        if ( $total >= 80 ) {
+            $rating = 'good';
+        } elseif ( $total >= 50 ) {
+            $rating = 'ok';
+        }
+
+        $result = array(
+            'score'  => $total,
+            'rating' => $rating,
+            'checks' => $checks,
+            'cached' => false,
+        );
+
+        set_transient( $cache_key, $result, 7 * DAY_IN_SECONDS );
+
+        return $result;
+    }
+
+    /**
      * Truncate text at sentence boundary.
      */
     private static function truncate_at_sentence( $text, $max_chars = 1500 ) {
