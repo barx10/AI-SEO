@@ -64,51 +64,86 @@ class AI_SEO_LLMS_Txt {
         $lines[] = 'URL: ' . home_url( '/' );
         $lines[] = '';
 
-        $sections = array(
-            'page' => 'Pages',
-            'post' => 'Posts',
-        );
-
-        foreach ( $sections as $post_type => $heading ) {
-            $items = get_posts( array(
-                'post_type'      => $post_type,
-                'post_status'    => 'publish',
-                'posts_per_page' => self::MAX_ITEMS,
-                'orderby'        => 'modified',
-                'order'          => 'DESC',
-            ) );
-
-            if ( empty( $items ) ) {
-                continue;
-            }
-
+        // Pages: flat list.
+        $pages = self::get_published( 'page' );
+        if ( ! empty( $pages ) ) {
             $rows = array();
-            foreach ( $items as $item ) {
-                // Respect noindex: skip content excluded from search.
-                $robots = get_post_meta( $item->ID, '_ai_seo_robots_meta', true );
-                if ( is_array( $robots ) && in_array( 'noindex', $robots, true ) ) {
-                    continue;
-                }
-
-                $excerpt = self::get_excerpt( $item );
-                $row     = '- [' . $item->post_title . '](' . get_permalink( $item->ID ) . ')';
-                if ( $excerpt !== '' ) {
-                    $row .= ': ' . $excerpt;
-                }
-                $rows[] = $row;
+            foreach ( $pages as $item ) {
+                $rows[] = self::build_row( $item );
             }
-
-            if ( empty( $rows ) ) {
-                continue;
-            }
-
-            $lines[] = '## ' . $heading;
+            $lines[] = '## Pages';
             $lines[] = '';
             $lines   = array_merge( $lines, $rows );
             $lines[] = '';
         }
 
+        // Posts: grouped under their primary (first) category.
+        $posts = self::get_published( 'post' );
+        if ( ! empty( $posts ) ) {
+            $groups = array();
+            $other  = array();
+            foreach ( $posts as $item ) {
+                $cats = get_the_category( $item->ID );
+                $row  = self::build_row( $item );
+                if ( ! empty( $cats ) ) {
+                    // Use the primary (first) category, same as the breadcrumbs.
+                    $groups[ $cats[0]->name ][] = $row;
+                } else {
+                    $other[] = $row;
+                }
+            }
+
+            ksort( $groups, SORT_NATURAL | SORT_FLAG_CASE );
+
+            $lines[] = '## Posts';
+            $lines[] = '';
+            foreach ( $groups as $cat_name => $rows ) {
+                $lines[] = '### ' . $cat_name;
+                $lines[] = '';
+                $lines   = array_merge( $lines, $rows );
+                $lines[] = '';
+            }
+            if ( ! empty( $other ) ) {
+                $lines[] = '### Øvrig';
+                $lines[] = '';
+                $lines   = array_merge( $lines, $other );
+                $lines[] = '';
+            }
+        }
+
         return rtrim( implode( "\n", $lines ) ) . "\n";
+    }
+
+    /**
+     * Fetch published items of a post type, newest first, excluding noindex.
+     *
+     * @return WP_Post[]
+     */
+    private static function get_published( $post_type ) {
+        $items = get_posts( array(
+            'post_type'      => $post_type,
+            'post_status'    => 'publish',
+            'posts_per_page' => self::MAX_ITEMS,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+        ) );
+
+        return array_filter( $items, function ( $item ) {
+            $robots = get_post_meta( $item->ID, '_ai_seo_robots_meta', true );
+            return ! ( is_array( $robots ) && in_array( 'noindex', $robots, true ) );
+        } );
+    }
+
+    /**
+     * Build a single markdown list row for an item.
+     */
+    private static function build_row( $item ) {
+        $excerpt = self::get_excerpt( $item );
+        $row     = '- [' . $item->post_title . '](' . get_permalink( $item->ID ) . ')';
+        if ( $excerpt !== '' ) {
+            $row .= ': ' . $excerpt;
+        }
+        return $row;
     }
 
     /**
