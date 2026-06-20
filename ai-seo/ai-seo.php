@@ -137,7 +137,9 @@ function ai_seo_enqueue_admin_assets( $hook ) {
     $is_migration  = ( $screen && $screen->id === 'tools_page_ai-seo-migration' );
     $is_list       = ( $hook === 'edit.php' );
     $is_redirects  = ( $screen && $screen->id === 'tools_page_ai-seo-redirects' );
-    $is_geo        = ( $screen && in_array( $screen->id, array( 'tools_page_ai-seo-llms', 'tools_page_ai-seo-robots' ), true ) );
+    // Match regardless of the menu-hook prefix (e.g. ai-seo_page_…) so the
+    // GEO tool pages always get the admin styles/scripts.
+    $is_geo        = ( $screen && ( false !== strpos( $screen->id, 'ai-seo-llms' ) || false !== strpos( $screen->id, 'ai-seo-robots' ) ) );
 
     if ( ! $is_editor && ! $is_settings && ! $is_dashboard && ! $is_migration && ! $is_list && ! $is_redirects && ! $is_geo ) {
         return;
