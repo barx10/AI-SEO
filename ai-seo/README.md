@@ -146,6 +146,40 @@ Meta-boksen inneholder fire AI-drevne knapper som sender innholdet til den valgt
 
 En spinner vises mens AI-kallet pågår. Forespørsler er hastighetsbegrenset til 30 per minutt per bruker.
 
+## GEO-optimering (GEO)
+
+GEO (Generative Engine Optimization) handler om å gjøre innholdet ditt lett å oppdage, forstå og sitere for KI-assistenter som ChatGPT, Claude, Perplexity og Google AI. Hele modulen styres av av/på-bryteren **GEO-optimering** under **Moduler** i innstillingene, og består av fire deler:
+
+### llms.txt
+
+Et auto-generert innholdskart for KI-assistenter, servert dynamisk på `/llms.txt` (via rewrite – ingen fil skrives til disk). Filen bygges fra nettstedsnavn, beskrivelse og publiserte sider/innlegg, der innleggene grupperes under sin mest spesifikke kategori for et tydelig temakart. Innhold med `noindex` ekskluderes. Under **AI SEO > llms.txt** ser du en forhåndsvisning av den auto-genererte filen og kan eventuelt overstyre den med egen tekst.
+
+### KI-robot-analyse
+
+Under **AI SEO > KI-roboter** ser du status for 14 kjente KI-roboter (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, anthropic-ai, cohere-ai, CCBot, ChatGPT-User, OAI-SearchBot, Applebot-Extended, Bytespider, ImagesiftBot, YouBot, facebookexternalhit) mot gjeldende robots.txt:
+
+- **Tillatt** (grønn), **Blokkert** (rød) eller **Ikke nevnt** (grå) – med konkret anbefaling per robot
+- **Ett-klikks blokkering**: huk av robotene du vil blokkere og lagre. Reglene injiseres dynamisk via WordPress sitt `robots_txt`-filter – ingen manuell redigering av robots.txt
+
+### Sitatbarhet-score
+
+I meta-boksen på hvert innlegg kan du kjøre en AI-vurdert **sitatbarhet-analyse** (0–100) som måler hvor lett innholdet er å sitere for KI. Scoren bygger på 6 vektede kontroller:
+
+| Kontroll | Vekt |
+|----------|------|
+| Faktapåstander med kilder | 20 |
+| Tydelig forfatter med ekspertise | 15 |
+| Definerte begreper | 15 |
+| Spørsmåls-/påstandsoverskrifter | 15 |
+| Unike data, tall og lister | 20 |
+| E-E-A-T synlig (dato/forfatter/organisasjon) | 15 |
+
+Resultatet vises som et farget badge atskilt fra SEO-scoren, med en sjekkliste og konkret tilbakemelding per kontroll. Analysen caches i 7 dager for å holde AI-kostnaden lav.
+
+### Speakable-markering
+
+Når schema-type er satt til FAQ, legges `SpeakableSpecification` automatisk til i FAQPage-strukturdataen, slik at stemmeassistenter kan lese opp spørsmål og svar.
+
 ## Omdirigeringer
 
 Omdirigeringsmodulen finner du under **Verktøy > Omdirigeringer**. Her kan du:

@@ -171,6 +171,40 @@ In the WordPress post list, the plugin adds three extra columns:
 
 **Inline Editing:** Click directly on the SEO title or meta description in the post list to edit them without opening the post. Changes are saved via AJAX without page reload. Character limits enforce max 70 characters for title and 160 characters for description.
 
+## GEO Optimization (GEO)
+
+GEO (Generative Engine Optimization) is about making your content easy for AI assistants like ChatGPT, Claude, Perplexity, and Google AI to discover, understand, and cite. The entire module is controlled by the **GEO Optimization** toggle under **Modules** in the settings, and consists of four parts:
+
+### llms.txt
+
+An auto-generated content map for AI assistants, served dynamically at `/llms.txt` (via rewrite – no file is written to disk). The file is built from the site name, description, and published pages/posts, with posts grouped under their most specific category for a clear topic map. Content with `noindex` is excluded. Under **AI SEO > llms.txt** you see a preview of the auto-generated file and can optionally override it with your own text.
+
+### AI Crawler Analysis
+
+Under **AI SEO > AI Robots** you see the status of 14 known AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, anthropic-ai, cohere-ai, CCBot, ChatGPT-User, OAI-SearchBot, Applebot-Extended, Bytespider, ImagesiftBot, YouBot, facebookexternalhit) against the current robots.txt:
+
+- **Allowed** (green), **Blocked** (red), or **Not mentioned** (gray) – with a concrete recommendation per crawler
+- **One-click blocking**: check the crawlers you want to block and save. The rules are injected dynamically via WordPress's `robots_txt` filter – no manual editing of robots.txt
+
+### Citability Score
+
+In the meta box on each post you can run an AI-assessed **citability analysis** (0–100) that measures how easily the content can be cited by AI. The score is based on 6 weighted checks:
+
+| Check | Weight |
+|-------|--------|
+| Factual claims with sources | 20 |
+| Clear author with expertise | 15 |
+| Defined terms | 15 |
+| Question/statement headings | 15 |
+| Unique data, numbers, and lists | 20 |
+| E-E-A-T visible (date/author/organization) | 15 |
+
+The result is shown as a colored badge separate from the SEO score, with a checklist and concrete feedback per check. The analysis is cached for 7 days to keep AI costs low.
+
+### Speakable Markup
+
+When the schema type is set to FAQ, `SpeakableSpecification` is automatically added to the FAQPage structured data, allowing voice assistants to read questions and answers aloud.
+
 ## Redirects
 
 The redirect module is found under **Tools > Redirects**. Here you can:
