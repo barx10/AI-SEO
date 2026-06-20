@@ -33,6 +33,7 @@ Under innstillingene kan du aktivere eller deaktivere individuelle moduler:
 | **OpenGraph / Twitter Cards** | Legger til sosiale metatagger inkludert egendefinert sosialt bilde |
 | **Brødsmuler** | Aktiverer brødsmulesti via shortcode `[ai_seo_breadcrumbs]` |
 | **Omdirigeringer** | Aktiverer 301/302 omdirigeringsbehandler |
+| **GEO-optimering** | Verktøy for KI-synlighet: llms.txt-generator, KI-robot-analyse av robots.txt, sitatbarhet-score per innlegg og speakable-markering på FAQ |
 
 ### Sosiale medier
 
