@@ -2,8 +2,8 @@
 /**
  * Plugin Name: AI SEO
  * Plugin URI:  https://example.com/ai-seo
- * Description: AI-drevet SEO-programtillegg for WordPress med støtte for metatagger, sitemap, schema-markering, lesbarhetsanalyse, omdirigeringer og brødsmuler.
- * Version:     2.0.0
+ * Description: AI-drevet SEO-programtillegg for WordPress med støtte for metatagger, sitemap, schema-markering, lesbarhetsanalyse, omdirigeringer, brødsmuler og GEO-optimering (llms.txt, KI-robotstyring, sitatbarhet).
+ * Version:     2.3.0
  * Author:      AI SEO
  * License:     GPL-2.0-or-later
  * Text Domain: ai-seo
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AI_SEO_VERSION', '2.2.0' );
+define( 'AI_SEO_VERSION', '2.3.0' );
 define( 'AI_SEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

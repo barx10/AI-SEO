@@ -33,6 +33,7 @@ In the settings you can enable or disable individual modules:
 | **OpenGraph / Twitter Cards** | Adds social meta tags including custom social image |
 | **Breadcrumbs** | Enables breadcrumb trail via shortcode `[ai_seo_breadcrumbs]` |
 | **Redirects** | Enables 301/302 redirect manager |
+| **GEO Optimization** | Tools for AI visibility: llms.txt generator, AI-crawler robots.txt analysis, per-post citability score, and speakable markup on FAQ |
 
 ### Social Media
 
