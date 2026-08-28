@@ -18,7 +18,7 @@ AI SEO er et WordPress-programtillegg som kombinerer tradisjonelle SEO-verktøy 
 2. Velg AI-leverandør:
    - **Claude (Anthropic)** – bruker modellen Claude Sonnet 4.5
    - **OpenAI** – bruker modellen GPT-4o
-   - **Google (Gemini)** – bruker modellen Gemini 3 Flash Preview
+   - **Google (Gemini)** – bruker modellen Gemini 3.7 Flash
 3. Velg modell (filtreres automatisk basert på valgt leverandør)
 4. Lim inn API-nøkkelen din – den krypteres automatisk med Sodium-kryptering ved lagring
 

@@ -18,12 +18,7 @@ class AI_SEO_Client {
 
         // Migrate deprecated/retired model IDs to their stable replacements so
         // existing installs keep working without having to re-save settings.
-        $deprecated_models = array(
-            'gemini-3.1-flash-lite-preview' => 'gemini-3.1-flash-lite',
-        );
-        if ( isset( $deprecated_models[ $this->model ] ) ) {
-            $this->model = $deprecated_models[ $this->model ];
-        }
+        $this->model = AI_SEO_Settings_Page::migrate_model( $this->model );
     }
 
     /**

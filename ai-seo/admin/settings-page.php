@@ -5,6 +5,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AI_SEO_Settings_Page {
 
+    /**
+     * Model IDs the plugin is allowed to send to a provider.
+     *
+     * @return array
+     */
+    public static function get_allowed_models() {
+        return array(
+            'claude-sonnet-4-5-20250929',
+            'gpt-5-mini',
+            'gpt-4.1-mini',
+            'gpt-4o',
+            'gemini-3.7-flash',
+            'gemini-3.6-flash',
+            'gemini-3.1-flash-lite',
+        );
+    }
+
+    /**
+     * Retired model IDs mapped to the stable model that replaces them, so
+     * existing installs keep working without having to re-save settings.
+     *
+     * @return array
+     */
+    public static function get_model_migrations() {
+        return array(
+            'gemini-3-flash-preview'        => 'gemini-3.7-flash',
+            'gemini-3.1-flash-lite-preview' => 'gemini-3.1-flash-lite',
+            'gemini-2.5-flash'              => 'gemini-3.6-flash',
+            'gemini-2.5-flash-lite'         => 'gemini-3.1-flash-lite',
+            'gemini-2.0-flash'              => 'gemini-3.6-flash',
+            'gemini-2.0-flash-lite'         => 'gemini-3.1-flash-lite',
+        );
+    }
+
+    /**
+     * Translate a stored model ID to the one the plugin should actually use.
+     *
+     * @param  string $model Stored model ID.
+     * @return string
+     */
+    public static function migrate_model( $model ) {
+        $migrations = self::get_model_migrations();
+
+        return isset( $migrations[ $model ] ) ? $migrations[ $model ] : $model;
+    }
+
     public function init() {
         add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
@@ -93,17 +139,10 @@ class AI_SEO_Settings_Page {
             ? $input['ai_provider']
             : 'anthropic';
 
-        $allowed_models = array(
-            'claude-sonnet-4-5-20250929',
-            'gpt-5-mini',
-            'gpt-4.1-mini',
-            'gpt-4o',
-            'gemini-3-flash-preview',
-            'gemini-2.5-flash',
-            'gemini-3.1-flash-lite',
-        );
-        $sanitized['ai_model'] = isset( $input['ai_model'] ) && in_array( $input['ai_model'], $allowed_models, true )
-            ? $input['ai_model']
+        $submitted_model = isset( $input['ai_model'] ) ? self::migrate_model( $input['ai_model'] ) : '';
+
+        $sanitized['ai_model'] = in_array( $submitted_model, self::get_allowed_models(), true )
+            ? $submitted_model
             : 'claude-sonnet-4-5-20250929';
 
         // Encrypt API key (skip if defined as constant in wp-config.php).
@@ -321,9 +360,7 @@ class AI_SEO_Settings_Page {
 
         // Map deprecated/retired model IDs to their stable replacements so the
         // dropdown stays in sync with the model the plugin actually uses.
-        if ( 'gemini-3.1-flash-lite-preview' === $model ) {
-            $model = 'gemini-3.1-flash-lite';
-        }
+        $model = self::migrate_model( $model );
         ?>
         <select name="ai_seo_options[ai_model]" id="ai_seo_model">
             <optgroup label="Anthropic" class="ai-seo-model-group" data-provider="anthropic">
@@ -335,8 +372,8 @@ class AI_SEO_Settings_Page {
                 <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>GPT-4o</option>
             </optgroup>
             <optgroup label="Google" class="ai-seo-model-group" data-provider="google">
-                <option value="gemini-3-flash-preview" <?php selected( $model, 'gemini-3-flash-preview' ); ?>>Gemini 3 Flash Preview</option>
-                <option value="gemini-2.5-flash" <?php selected( $model, 'gemini-2.5-flash' ); ?>>Gemini 2.5 Flash</option>
+                <option value="gemini-3.7-flash" <?php selected( $model, 'gemini-3.7-flash' ); ?>>Gemini 3.7 Flash</option>
+                <option value="gemini-3.6-flash" <?php selected( $model, 'gemini-3.6-flash' ); ?>>Gemini 3.6 Flash</option>
                 <option value="gemini-3.1-flash-lite" <?php selected( $model, 'gemini-3.1-flash-lite' ); ?>>Gemini 3.1 Flash Lite</option>
             </optgroup>
         </select>
