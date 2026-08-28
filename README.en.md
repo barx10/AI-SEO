@@ -18,7 +18,7 @@ AI SEO is a WordPress plugin that combines traditional SEO tools with AI-powered
 2. Choose your AI provider:
    - **Claude (Anthropic)** – uses the Claude Sonnet 4.5 model
    - **OpenAI** – uses the GPT-4o model
-   - **Google (Gemini)** – uses the Gemini 3 Flash Preview model
+   - **Google (Gemini)** – uses the Gemini 3.7 Flash model
 3. Select model (automatically filtered based on chosen provider)
 4. Paste your API key – it is automatically encrypted with Sodium encryption on save
 
