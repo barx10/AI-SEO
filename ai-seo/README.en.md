@@ -329,6 +329,37 @@ Features:
 - API key can also be defined as a constant (`AI_SEO_API_KEY`) in `wp-config.php` – this takes precedence over the database value
 - **Rate limiting**: Max 30 AI requests per minute per user
 
+## Troubleshooting
+
+### 403 errors from `admin-ajax.php`
+
+A WordPress nonce is valid for 12 hours. If an editor screen stays open longer
+than that, the server rejects every AI button with HTTP 403 and a bare `-1`.
+The plugin now renews the nonce through the WordPress heartbeat API and retries
+the request once. If it cannot obtain a new nonce, it shows "Sikkerhetsnøkkelen
+er utløpt. Last siden på nytt og prøv igjen." (the security key expired, reload
+the page).
+
+Analyses that send the whole post (SEO score, readability, AI quality,
+citability) now transmit the text base64-encoded. Raw HTML in the request body
+makes firewalls such as ModSecurity answer with 403 before WordPress runs, which
+is why buttons that only send a post ID kept working while the rest stopped.
+
+If 403 responses persist after a page reload, the cause is outside the plugin.
+Common sources:
+
+- Security plugins (Wordfence, iThemes Security, All-In-One Security) blocking
+  POST requests to `wp-admin/admin-ajax.php`
+- A host-level firewall or WAF, or Cloudflare rules targeting `admin-ajax.php`
+- Page caching applied to logged-in admin screens, serving a stale nonce
+- Mismatched `WP_HOME`/`WP_SITEURL` so the request crosses domains and the
+  authentication cookie is not sent
+
+### "Handlingen ble avvist av WordPress"
+
+The response was `0` or HTTP 400: either the session expired or the AJAX action
+is not registered. Check that the plugin is active and log in again.
+
 ## Requirements
 
 - WordPress 5.0 or newer

@@ -1,6 +1,264 @@
 (function () {
     'use strict';
 
+    // ------------------------------------------------------------------
+    // Shared AJAX plumbing
+    //
+    // Every request to admin-ajax.php goes through aiSeoRequest().  It keeps
+    // one copy of the nonce, renews it over the WordPress heartbeat when the
+    // server rejects it, and retries the request once.  A nonce lives for 12
+    // hours, so an editor screen left open overnight used to answer every
+    // click with "HTTP 403" until the page was reloaded.
+    // ------------------------------------------------------------------
+
+    var nonceRefresh    = null;
+    var heartbeatBound  = false;
+
+    function heartbeatAvailable() {
+        return !!( window.jQuery && window.wp && window.wp.heartbeat );
+    }
+
+    function bindHeartbeat() {
+        if ( heartbeatBound || ! heartbeatAvailable() ) {
+            return;
+        }
+
+        heartbeatBound = true;
+
+        window.jQuery( document ).on( 'heartbeat-send.ai-seo', function ( event, data ) {
+            data.ai_seo_refresh_nonce = 1;
+        } );
+
+        window.jQuery( document ).on( 'heartbeat-tick.ai-seo', function ( event, data ) {
+            if ( data && data.ai_seo_nonce && window.aiSeo ) {
+                window.aiSeo.nonce = data.ai_seo_nonce;
+            }
+        } );
+    }
+
+    /**
+     * Ask the server for a fresh nonce via the heartbeat API.
+     *
+     * @return {Promise<string>} Resolves with the new nonce.
+     */
+    function refreshNonce() {
+        if ( nonceRefresh ) {
+            return nonceRefresh;
+        }
+
+        if ( ! heartbeatAvailable() ) {
+            return Promise.reject( new Error( 'no-heartbeat' ) );
+        }
+
+        // The page may have loaded before the heartbeat API was ready.
+        bindHeartbeat();
+
+        nonceRefresh = new Promise( function ( resolve, reject ) {
+            var $doc  = window.jQuery( document );
+            var timer = window.setTimeout( function () {
+                cleanup();
+                reject( new Error( 'timeout' ) );
+            }, 15000 );
+
+            function cleanup() {
+                window.clearTimeout( timer );
+                $doc.off( 'heartbeat-tick', handler );
+                $doc.off( 'heartbeat-error', errorHandler );
+                nonceRefresh = null;
+            }
+
+            function errorHandler() {
+                cleanup();
+                reject( new Error( 'heartbeat-error' ) );
+            }
+
+            function handler( event, data ) {
+                if ( ! data || ! data.ai_seo_nonce ) {
+                    return;
+                }
+                if ( window.aiSeo ) {
+                    window.aiSeo.nonce = data.ai_seo_nonce;
+                }
+                var fresh = data.ai_seo_nonce;
+                cleanup();
+                resolve( fresh );
+            }
+
+            $doc.on( 'heartbeat-tick', handler );
+            $doc.on( 'heartbeat-error', errorHandler );
+            window.wp.heartbeat.connectNow();
+        } );
+
+        return nonceRefresh;
+    }
+
+    /**
+     * Base64-encode UTF-8 text for transport.
+     *
+     * Editor content is posted encoded: raw HTML in the request body makes web
+     * application firewalls answer admin-ajax.php with HTTP 403 before
+     * WordPress runs, which silently kills the analyses that send the whole
+     * post body while simpler actions keep working.
+     *
+     * @param {string} text Content to encode.
+     * @return {?string} Base64 string, or null when encoding is unavailable.
+     */
+    function encodeContent( text ) {
+        try {
+            var bytes  = new TextEncoder().encode( String( text ) );
+            var binary = '';
+            var chunk  = 0x8000;
+
+            for ( var i = 0; i < bytes.length; i += chunk ) {
+                binary += String.fromCharCode.apply( null, bytes.subarray( i, i + chunk ) );
+            }
+
+            return window.btoa( binary );
+        } catch ( e ) {
+            return null;
+        }
+    }
+
+    function aiSeoError( message, code ) {
+        var error = new Error( message );
+        error.aiSeoCode = code || 'error';
+        return error;
+    }
+
+    /**
+     * POST to admin-ajax.php with automatic nonce renewal.
+     *
+     * @param {string} action  AJAX action name (without the wp_ajax_ prefix).
+     * @param {Object} params  Extra POST fields.
+     * @return {Promise<Object>} Resolves with the payload from wp_send_json_success().
+     */
+    function aiSeoRequest( action, params ) {
+        return send( false );
+
+        function send( isRetry ) {
+            var body = new FormData();
+            body.append( 'action', action );
+            body.append( 'nonce', ( window.aiSeo && window.aiSeo.nonce ) || '' );
+
+            Object.keys( params || {} ).forEach( function ( key ) {
+                var value = params[ key ];
+
+                if ( value === undefined || value === null ) {
+                    value = '';
+                }
+
+                if ( key === 'post_content' ) {
+                    var encoded = encodeContent( value );
+                    if ( null !== encoded ) {
+                        body.append( 'post_content_b64', encoded );
+                        return;
+                    }
+                }
+
+                body.append( key, value );
+            } );
+
+            return fetch( window.aiSeo.ajaxUrl, {
+                method: 'POST',
+                body: body,
+                credentials: 'same-origin'
+            } ).catch( function () {
+                throw aiSeoError( 'Nettverksfeil – kunne ikke kontakte serveren.', 'network' );
+            } ).then( function ( response ) {
+                return response.text().then( function ( text ) {
+                    return handle( response, text, isRetry );
+                } );
+            } );
+        }
+
+        function retryOrFail( isRetry, message, code ) {
+            if ( isRetry ) {
+                return Promise.reject( aiSeoError( message, code ) );
+            }
+
+            return refreshNonce().then(
+                function () {
+                    return send( true );
+                },
+                function () {
+                    return Promise.reject( aiSeoError( message, code ) );
+                }
+            );
+        }
+
+        function handle( response, text, isRetry ) {
+            var trimmed = ( text || '' ).trim();
+            var data    = null;
+
+            try {
+                data = JSON.parse( trimmed );
+            } catch ( e ) {
+                data = null;
+            }
+
+            if ( data && typeof data === 'object' && 'success' in data ) {
+                if ( data.success ) {
+                    return data.data;
+                }
+
+                var payload = data.data;
+                var code    = payload && payload.code ? payload.code : '';
+                var message = '';
+
+                if ( typeof payload === 'string' ) {
+                    message = payload;
+                } else if ( payload && payload.message ) {
+                    message = payload.message;
+                }
+
+                if ( code === 'invalid_nonce' ) {
+                    return retryOrFail( isRetry, message || 'Sikkerhetsnøkkelen er utløpt. Last siden på nytt og prøv igjen.', code );
+                }
+
+                return Promise.reject( aiSeoError( message || 'En ukjent feil oppsto.', code || 'error' ) );
+            }
+
+            // Bare "-1" is WordPress' answer to a rejected nonce, "0" means the
+            // action is not registered or the session is gone.
+            if ( trimmed === '-1' || response.status === 403 ) {
+                return retryOrFail(
+                    isRetry,
+                    'Sikkerhetsnøkkelen er utløpt eller blokkert. Last siden på nytt og prøv igjen.',
+                    'invalid_nonce'
+                );
+            }
+
+            if ( trimmed === '0' || response.status === 400 ) {
+                return Promise.reject( aiSeoError(
+                    'Handlingen ble avvist av WordPress. Sjekk at du er logget inn, og at programtillegget er aktivt.',
+                    'unknown_action'
+                ) );
+            }
+
+            if ( response.status === 401 ) {
+                return Promise.reject( aiSeoError( 'Du er logget ut. Logg inn på nytt og prøv igjen.', 'logged_out' ) );
+            }
+
+            if ( ! response.ok ) {
+                return Promise.reject( aiSeoError( 'Forespørselen feilet (HTTP ' + response.status + ').', 'http_error' ) );
+            }
+
+            return Promise.reject( aiSeoError( 'Kunne ikke tolke svaret fra serveren.', 'parse_error' ) );
+        }
+    }
+
+    /**
+     * Build a red error paragraph, text-only so server messages cannot inject markup.
+     */
+    function errorParagraph( error ) {
+        var p = document.createElement( 'p' );
+        p.style.color = '#cc0000';
+        p.textContent = ( error && error.message ) || 'En ukjent feil oppsto.';
+        return p;
+    }
+
+    bindHeartbeat();
+
     document.addEventListener('DOMContentLoaded', function () {
         // --- SERP Preview live update ---
         var titleInput = document.getElementById('ai_seo_meta_title');
@@ -115,48 +373,17 @@
             showSpinner(true);
             disableButtons(true);
 
-            var formData = new FormData();
-            formData.append('action', action);
-            formData.append('nonce', aiSeo.nonce);
-
-            for (var key in params) {
-                if (params.hasOwnProperty(key)) {
-                    formData.append(key, params[key]);
-                }
-            }
-
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', aiSeo.ajaxUrl, true);
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState !== 4) return;
-
-                showSpinner(false);
-                disableButtons(false);
-
-                if (xhr.status === 200) {
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        if (response.success && response.data) {
-                            onSuccess(response.data);
-                        } else {
-                            showError(response.data || 'En ukjent feil oppsto.');
-                        }
-                    } catch (e) {
-                        showError('Kunne ikke tolke svaret fra serveren.');
-                    }
-                } else {
-                    showError('Forespørselen feilet (HTTP ' + xhr.status + ').');
-                }
-            };
-
-            xhr.onerror = function () {
-                showSpinner(false);
-                disableButtons(false);
-                showError('Nettverksfeil – kunne ikke kontakte serveren.');
-            };
-
-            xhr.send(formData);
+            aiSeoRequest(action, params)
+                .then(function (data) {
+                    showSpinner(false);
+                    disableButtons(false);
+                    onSuccess(data);
+                })
+                .catch(function (error) {
+                    showSpinner(false);
+                    disableButtons(false);
+                    showError(error.message || 'En ukjent feil oppsto.');
+                });
         }
 
         function showSpinner(show) {
@@ -344,40 +571,28 @@
                 }
             }
 
-            var formData = new FormData();
-            formData.append('action', 'ai_seo_refresh_score');
-            formData.append('nonce', aiSeo.nonce);
-            formData.append('post_id', postId);
-            formData.append('seo_title', currentTitle ? currentTitle.value : '');
-            formData.append('seo_description', currentDesc ? currentDesc.value : '');
-            formData.append('seo_keyword', currentKw ? currentKw.value : '');
-            formData.append('post_content', editorContent);
-
             btnRefreshScore.disabled = true;
             btnRefreshScore.textContent = 'Oppdaterer…';
 
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', aiSeo.ajaxUrl, true);
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState !== 4) return;
-
-                btnRefreshScore.disabled = false;
-                btnRefreshScore.textContent = 'Oppdater analyse';
-
-                if (xhr.status === 200) {
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        if (response.success && response.data) {
-                            renderSeoScore(response.data);
-                        }
-                    } catch (e) {
-                        // Silently fail.
+            aiSeoRequest('ai_seo_refresh_score', {
+                post_id: postId,
+                seo_title: currentTitle ? currentTitle.value : '',
+                seo_description: currentDesc ? currentDesc.value : '',
+                seo_keyword: currentKw ? currentKw.value : '',
+                post_content: editorContent
+            })
+                .then(function (data) {
+                    btnRefreshScore.disabled = false;
+                    btnRefreshScore.textContent = 'Oppdater analyse';
+                    if (data) {
+                        renderSeoScore(data);
                     }
-                }
-            };
-
-            xhr.send(formData);
+                })
+                .catch(function (error) {
+                    btnRefreshScore.disabled = false;
+                    btnRefreshScore.textContent = 'Oppdater analyse';
+                    showError(error.message || 'Kunne ikke oppdatere analysen.');
+                });
         }
 
         function renderSeoScore(data) {
@@ -447,34 +662,25 @@
                 btnHighlight.disabled = true;
                 btnHighlight.textContent = 'Analyserer\u2026';
 
-                var formData = new FormData();
-                formData.append('action', 'ai_seo_readability_highlight');
-                formData.append('nonce', aiSeo.nonce);
-                formData.append('post_id', postId);
-                formData.append('post_content', editorContent);
+                aiSeoRequest('ai_seo_readability_highlight', {
+                    post_id: postId,
+                    post_content: editorContent
+                })
+                    .then(function (data) {
+                        btnHighlight.disabled = false;
+                        btnHighlight.textContent = 'Vis i teksten';
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', aiSeo.ajaxUrl, true);
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState !== 4) return;
-
-                    btnHighlight.disabled = false;
-                    btnHighlight.textContent = 'Vis i teksten';
-
-                    if (xhr.status === 200) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.success && response.data && highlightContent && highlightPanel) {
-                                highlightContent.innerHTML = response.data.html;
-                                highlightPanel.style.display = 'block';
-                                initHighlightNavigation();
-                            }
-                        } catch (e) {}
-                    }
-                };
-
-                xhr.send(formData);
+                        if (data && highlightContent && highlightPanel) {
+                            highlightContent.innerHTML = data.html;
+                            highlightPanel.style.display = 'block';
+                            initHighlightNavigation();
+                        }
+                    })
+                    .catch(function (error) {
+                        btnHighlight.disabled = false;
+                        btnHighlight.textContent = 'Vis i teksten';
+                        showError(error.message || 'Kunne ikke analysere teksten.');
+                    });
             });
         }
 
@@ -633,50 +839,33 @@
                     resultBox.textContent = '';
                 }
 
-                var formData = new FormData();
-                formData.append('action', 'ai_seo_run_migration');
-                formData.append('nonce', aiSeo.nonce);
-                formData.append('source', source);
+                var params = { source: source };
                 if (overwrite) {
-                    formData.append('overwrite', '1');
+                    params.overwrite = '1';
                 }
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', aiSeo.ajaxUrl, true);
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState !== 4) return;
-
+                function restoreButton() {
                     btn.disabled = false;
                     btn.textContent = source === 'yoast' ? 'Importer fra Yoast SEO' : 'Importer fra Rank Math';
+                }
 
-                    if (xhr.status === 200 && resultBox) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.success && response.data) {
-                                resultBox.className = 'ai-seo-migration-result ai-seo-migration-success';
-                                resultBox.textContent = 'Migrering fullf\u00f8rt! ' + response.data.migrated + ' innlegg oppdatert, ' + response.data.skipped + ' hoppet over.';
-                            } else {
-                                resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
-                                resultBox.textContent = response.data || 'En feil oppsto under migreringen.';
-                            }
-                        } catch (e) {
-                            resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
-                            resultBox.textContent = 'Kunne ikke tolke svaret fra serveren.';
+                aiSeoRequest('ai_seo_run_migration', params)
+                    .then(function (data) {
+                        restoreButton();
+                        if (resultBox) {
+                            resultBox.className = 'ai-seo-migration-result ai-seo-migration-success';
+                            resultBox.textContent = 'Migrering fullf\u00f8rt! ' + data.migrated + ' innlegg oppdatert, ' + data.skipped + ' hoppet over.';
+                            resultBox.style.display = 'block';
                         }
-                    }
-                };
-
-                xhr.onerror = function () {
-                    btn.disabled = false;
-                    btn.textContent = source === 'yoast' ? 'Importer fra Yoast SEO' : 'Importer fra Rank Math';
-                    if (resultBox) {
-                        resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
-                        resultBox.textContent = 'Nettverksfeil \u2013 kunne ikke kontakte serveren.';
-                    }
-                };
-
-                xhr.send(formData);
+                    })
+                    .catch(function (error) {
+                        restoreButton();
+                        if (resultBox) {
+                            resultBox.className = 'ai-seo-migration-result ai-seo-migration-error';
+                            resultBox.textContent = error.message || 'En feil oppsto under migreringen.';
+                            resultBox.style.display = 'block';
+                        }
+                    });
             });
         });
 
@@ -715,21 +904,24 @@
                 }
 
                 wrapper.classList.add('ai-seo-inline-saving');
+                wrapper.classList.remove('ai-seo-inline-error');
+                wrapper.removeAttribute('title');
 
-                var formData = new FormData();
-                formData.append('action', 'ai_seo_inline_save_meta');
-                formData.append('nonce', aiSeo.nonce);
-                formData.append('post_id', postId);
-                formData.append('field', field);
-                formData.append('value', value);
-
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', aiSeo.ajaxUrl, true);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState !== 4) return;
-                    wrapper.classList.remove('ai-seo-inline-saving');
-                };
-                xhr.send(formData);
+                aiSeoRequest('ai_seo_inline_save_meta', {
+                    post_id: postId,
+                    field: field,
+                    value: value
+                })
+                    .then(function () {
+                        wrapper.classList.remove('ai-seo-inline-saving');
+                    })
+                    .catch(function (error) {
+                        // A silent failure here loses the edit without telling
+                        // anyone, so mark the cell and keep the reason on hover.
+                        wrapper.classList.remove('ai-seo-inline-saving');
+                        wrapper.classList.add('ai-seo-inline-error');
+                        wrapper.title = error.message || 'Lagringen feilet.';
+                    });
             }
 
             inputEl.addEventListener('blur', saveInline);
@@ -784,29 +976,22 @@
             aiQualitySpinner.style.display = 'inline';
             aiQualityResults.innerHTML   = '';
 
-            const params = new FormData();
-            params.append( 'action',       'ai_seo_run_ai_quality' );
-            params.append( 'nonce',        aiSeo.nonce );
-            params.append( 'post_id',      postId );
-            params.append( 'seo_title',    seoTitle );
-            params.append( 'seo_description', seoDesc );
-            params.append( 'post_content', editorContent );
-
-            fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
-                .then( function ( r ) { return r.json(); } )
+            aiSeoRequest( 'ai_seo_run_ai_quality', {
+                post_id:         postId,
+                seo_title:       seoTitle,
+                seo_description: seoDesc,
+                post_content:    editorContent
+            } )
                 .then( function ( data ) {
-                    aiQualityBtn.disabled        = false;
+                    aiQualityBtn.disabled          = false;
                     aiQualitySpinner.style.display = 'none';
-                    if ( data.success ) {
-                        renderAiQualityResults( data.data );
-                    } else {
-                        aiQualityResults.innerHTML = '<p style="color:red;">Feil: ' + ( data.data || 'Ukjent feil' ) + '</p>';
-                    }
+                    renderAiQualityResults( data );
                 } )
-                .catch( function () {
-                    aiQualityBtn.disabled        = false;
+                .catch( function ( error ) {
+                    aiQualityBtn.disabled          = false;
                     aiQualitySpinner.style.display = 'none';
-                    aiQualityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+                    aiQualityResults.textContent   = '';
+                    aiQualityResults.appendChild( errorParagraph( error ) );
                 } );
         } );
     }
@@ -856,34 +1041,27 @@
                     editorContent = document.getElementById( 'content' ).value;
                 }
 
-                const params = new FormData();
-                params.append( 'action',          'ai_seo_run_ai_quality' );
-                params.append( 'nonce',            aiSeo.nonce );
-                params.append( 'post_id',          postId );
-                params.append( 'seo_title',        seoTitle );
-                params.append( 'seo_description',  seoDesc );
-                params.append( 'post_content',     editorContent );
-                params.append( 'force_refresh',    '1' );
-
                 aiQualityBtn.disabled          = true;
                 aiQualitySpinner.style.display = 'inline';
                 aiQualityResults.innerHTML     = '';
 
-                fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
-                    .then( function ( r ) { return r.json(); } )
+                aiSeoRequest( 'ai_seo_run_ai_quality', {
+                    post_id:         postId,
+                    seo_title:       seoTitle,
+                    seo_description: seoDesc,
+                    post_content:    editorContent,
+                    force_refresh:   '1'
+                } )
                     .then( function ( d ) {
                         aiQualityBtn.disabled          = false;
                         aiQualitySpinner.style.display = 'none';
-                        if ( d.success ) {
-                            renderAiQualityResults( d.data );
-                        } else {
-                            aiQualityResults.innerHTML = '<p style="color:red;">Feil ved oppdatering.</p>';
-                        }
+                        renderAiQualityResults( d );
                     } )
-                    .catch( function () {
+                    .catch( function ( error ) {
                         aiQualityBtn.disabled          = false;
                         aiQualitySpinner.style.display = 'none';
-                        aiQualityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+                        aiQualityResults.textContent   = '';
+                        aiQualityResults.appendChild( errorParagraph( error ) );
                     } );
             } );
         }
@@ -904,34 +1082,29 @@
             editorContent = document.getElementById( 'content' ).value;
         }
 
-        const params = new FormData();
-        params.append( 'action',       'ai_seo_citability' );
-        params.append( 'nonce',        aiSeo.nonce );
-        params.append( 'post_id',      postId );
-        params.append( 'post_content', editorContent );
+        const params = {
+            post_id:      postId,
+            post_content: editorContent
+        };
         if ( forceRefresh ) {
-            params.append( 'force_refresh', '1' );
+            params.force_refresh = '1';
         }
 
         citabilityBtn.disabled          = true;
         citabilitySpinner.style.display = 'inline';
         citabilityResults.innerHTML     = '';
 
-        fetch( aiSeo.ajaxUrl, { method: 'POST', body: params } )
-            .then( function ( r ) { return r.json(); } )
+        aiSeoRequest( 'ai_seo_citability', params )
             .then( function ( data ) {
                 citabilityBtn.disabled          = false;
                 citabilitySpinner.style.display = 'none';
-                if ( data.success ) {
-                    renderCitabilityResults( data.data );
-                } else {
-                    citabilityResults.innerHTML = '<p style="color:red;">Feil: ' + ( data.data || 'Ukjent feil' ) + '</p>';
-                }
+                renderCitabilityResults( data );
             } )
-            .catch( function () {
+            .catch( function ( error ) {
                 citabilityBtn.disabled          = false;
                 citabilitySpinner.style.display = 'none';
-                citabilityResults.innerHTML = '<p style="color:red;">Nettverksfeil. Prøv igjen.</p>';
+                citabilityResults.textContent   = '';
+                citabilityResults.appendChild( errorParagraph( error ) );
             } );
     }
 
