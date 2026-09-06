@@ -3,7 +3,7 @@
  * Plugin Name: AI SEO
  * Plugin URI:  https://example.com/ai-seo
  * Description: AI-drevet SEO-programtillegg for WordPress med støtte for metatagger, sitemap, schema-markering, lesbarhetsanalyse, omdirigeringer, brødsmuler og GEO-optimering (llms.txt, KI-robotstyring, sitatbarhet).
- * Version:     2.3.0
+ * Version:     2.3.1
  * Author:      AI SEO
  * License:     GPL-2.0-or-later
  * Text Domain: ai-seo
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AI_SEO_VERSION', '2.3.0' );
+define( 'AI_SEO_VERSION', '2.3.1' );
 define( 'AI_SEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -97,6 +97,16 @@ function ai_seo_init() {
         }
     }
 
+    // AJAX-only hooks.  ai_seo_init() runs on plugins_loaded, and the admin
+    // block below is skipped during admin-ajax.php requests, so handlers that
+    // live inside a class init() must be registered separately here.  Without
+    // this the inline-save action is never hooked and admin-ajax.php answers
+    // "0" with HTTP 400.
+    if ( $is_ajax ) {
+        $bulk_columns = new AI_SEO_Bulk_Columns();
+        add_action( 'wp_ajax_ai_seo_inline_save_meta', array( $bulk_columns, 'ajax_save_meta' ) );
+    }
+
     // Admin UI hooks (settings, meta box, pages, columns, dashboard).
     if ( $is_admin && ! $is_ajax ) {
         $settings = new AI_SEO_Settings_Page();
@@ -129,6 +139,100 @@ function ai_seo_init() {
 add_action( 'plugins_loaded', 'ai_seo_init' );
 
 /**
+ * Verify an AJAX request: login state, nonce and capability.
+ *
+ * Sends a structured JSON error and stops execution when a check fails.
+ * The error carries a machine-readable code so the browser can tell an
+ * expired nonce (recoverable: fetch a new one and retry) apart from a real
+ * permission problem.  check_ajax_referer() on its own answers with a bare
+ * "-1" and HTTP 403, which is what produced the unexplained 403 responses
+ * from admin-ajax.php once a nonce had aged past its 12-hour lifetime.
+ *
+ * @param string $capability Capability required for the action.
+ */
+function ai_seo_verify_ajax_request( $capability = 'edit_posts' ) {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error(
+            array(
+                'code'    => 'logged_out',
+                'message' => 'Du er ikke logget inn lenger. Logg inn på nytt og prøv igjen.',
+            ),
+            401
+        );
+    }
+
+    if ( ! check_ajax_referer( 'ai_seo_nonce', 'nonce', false ) ) {
+        wp_send_json_error(
+            array(
+                'code'    => 'invalid_nonce',
+                'message' => 'Sikkerhetsnøkkelen er utløpt. Last siden på nytt og prøv igjen.',
+            ),
+            403
+        );
+    }
+
+    if ( ! current_user_can( $capability ) ) {
+        wp_send_json_error(
+            array(
+                'code'    => 'forbidden',
+                'message' => 'Ingen tilgang.',
+            ),
+            403
+        );
+    }
+}
+
+/**
+ * Hand out a fresh AJAX nonce over the WordPress heartbeat.
+ *
+ * Keeps long-open editor screens working: the browser asks for a new nonce
+ * when the old one is rejected, instead of failing every request with 403
+ * until the page is reloaded.
+ */
+function ai_seo_heartbeat_received( $response, $data ) {
+    if ( empty( $data['ai_seo_refresh_nonce'] ) ) {
+        return $response;
+    }
+
+    if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+        $response['ai_seo_nonce'] = wp_create_nonce( 'ai_seo_nonce' );
+    }
+
+    return $response;
+}
+add_filter( 'heartbeat_received', 'ai_seo_heartbeat_received', 10, 2 );
+
+/**
+ * Read editor content sent with an AJAX request.
+ *
+ * The browser base64-encodes the content in post_content_b64.  Posting raw
+ * HTML to admin-ajax.php makes web application firewalls (ModSecurity,
+ * Wordfence, Cloudflare) reject the request with HTTP 403 before WordPress
+ * ever sees it, which is why analyses that carry the whole post body could
+ * stop working while actions that only send a post ID kept going.  The plain
+ * post_content field is still accepted so an older cached script keeps working.
+ *
+ * @return string Sanitized editor content.
+ */
+function ai_seo_get_posted_content() {
+    if ( isset( $_POST['post_content_b64'] ) && is_string( $_POST['post_content_b64'] ) ) {
+        $raw = wp_unslash( $_POST['post_content_b64'] );
+        // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- transport decoding, not obfuscation.
+        $decoded = base64_decode( str_replace( array( '-', '_' ), array( '+', '/' ), $raw ), true );
+
+        if ( false !== $decoded ) {
+            return wp_kses_post( $decoded );
+        }
+    }
+
+    if ( isset( $_POST['post_content'] ) ) {
+        return wp_kses_post( wp_unslash( $_POST['post_content'] ) );
+    }
+
+    return '';
+}
+
+/**
  * Enqueue admin assets.
  */
 function ai_seo_enqueue_admin_assets( $hook ) {
@@ -158,7 +262,7 @@ function ai_seo_enqueue_admin_assets( $hook ) {
     wp_enqueue_script(
         'ai-seo-admin',
         AI_SEO_PLUGIN_URL . 'assets/admin.js',
-        array(),
+        array( 'jquery', 'heartbeat' ),
         AI_SEO_VERSION,
         true
     );
@@ -179,11 +283,7 @@ add_action( 'admin_enqueue_scripts', 'ai_seo_enqueue_admin_assets' );
  * AJAX handler: Generate meta description.
  */
 function ai_seo_ajax_generate_description() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -219,11 +319,7 @@ add_action( 'wp_ajax_ai_seo_generate_description', 'ai_seo_ajax_generate_descrip
  * AJAX handler: Suggest titles.
  */
 function ai_seo_ajax_suggest_title() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -266,11 +362,7 @@ add_action( 'wp_ajax_ai_seo_suggest_title', 'ai_seo_ajax_suggest_title' );
  * AJAX handler: Suggest focus keyword.
  */
 function ai_seo_ajax_suggest_keyword() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -310,11 +402,7 @@ add_action( 'wp_ajax_ai_seo_suggest_keyword', 'ai_seo_ajax_suggest_keyword' );
  * AJAX handler: Analyze keywords.
  */
 function ai_seo_ajax_analyze_keywords() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -351,11 +439,7 @@ add_action( 'wp_ajax_ai_seo_analyze_keywords', 'ai_seo_ajax_analyze_keywords' );
  * AJAX handler: Suggest internal links.
  */
 function ai_seo_ajax_suggest_links() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -407,11 +491,7 @@ add_action( 'wp_ajax_ai_seo_suggest_links', 'ai_seo_ajax_suggest_links' );
  * AJAX handler: Refresh SEO score and checklist.
  */
 function ai_seo_ajax_refresh_score() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     $post_id          = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
     $meta_title       = isset( $_POST['seo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_title'] ) ) : '';
@@ -428,7 +508,7 @@ function ai_seo_ajax_refresh_score() {
     }
 
     // Use current editor content instead of saved post_content so unsaved changes are analyzed.
-    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    $editor_content = ai_seo_get_posted_content();
     if ( ! empty( $editor_content ) ) {
         $post->post_content = $editor_content;
     }
@@ -443,11 +523,7 @@ add_action( 'wp_ajax_ai_seo_refresh_score', 'ai_seo_ajax_refresh_score' );
  * AJAX handler: Run AI quality analysis.
  */
 function ai_seo_ajax_run_ai_quality() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     $post_id       = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
     $meta_title    = isset( $_POST['seo_title'] ) ? sanitize_text_field( wp_unslash( $_POST['seo_title'] ) ) : '';
@@ -464,7 +540,7 @@ function ai_seo_ajax_run_ai_quality() {
     }
 
     // Allow unsaved editor content (same pattern as refresh_score)
-    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    $editor_content = ai_seo_get_posted_content();
     if ( ! empty( $editor_content ) ) {
         $post->post_content = $editor_content;
     }
@@ -487,11 +563,7 @@ add_action( 'wp_ajax_ai_seo_run_ai_quality', 'ai_seo_ajax_run_ai_quality' );
  * AJAX handler: Citability ("sitatbarhet") analysis.
  */
 function ai_seo_ajax_citability() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     if ( ! AI_SEO_Settings_Page::check_rate_limit() ) {
         wp_send_json_error( 'For mange forespørsler. Vent litt og prøv igjen.' );
@@ -510,7 +582,7 @@ function ai_seo_ajax_citability() {
     }
 
     // Allow unsaved editor content (same pattern as refresh_score).
-    $editor_content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    $editor_content = ai_seo_get_posted_content();
     if ( ! empty( $editor_content ) ) {
         $post->post_content = $editor_content;
     }
@@ -535,11 +607,7 @@ add_action( 'wp_ajax_ai_seo_citability', 'ai_seo_ajax_citability' );
  * AJAX handler: Readability highlight.
  */
 function ai_seo_ajax_readability_highlight() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'edit_posts' );
 
     $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
     if ( ! $post_id ) {
@@ -547,7 +615,7 @@ function ai_seo_ajax_readability_highlight() {
     }
 
     // Use current editor content if available, otherwise saved content.
-    $content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
+    $content = ai_seo_get_posted_content();
     if ( empty( $content ) ) {
         $post = get_post( $post_id );
         if ( ! $post ) {
@@ -567,11 +635,7 @@ add_action( 'wp_ajax_ai_seo_readability_highlight', 'ai_seo_ajax_readability_hig
  * AJAX handler: Run SEO migration.
  */
 function ai_seo_ajax_run_migration() {
-    check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( 'Ingen tilgang.' );
-    }
+    ai_seo_verify_ajax_request( 'manage_options' );
 
     $source    = isset( $_POST['source'] ) ? sanitize_text_field( wp_unslash( $_POST['source'] ) ) : '';
     $overwrite = ! empty( $_POST['overwrite'] );

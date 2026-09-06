@@ -94,11 +94,7 @@ class AI_SEO_Bulk_Columns {
      * AJAX handler for inline meta saves.
      */
     public function ajax_save_meta() {
-        check_ajax_referer( 'ai_seo_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( 'Ingen tilgang.' );
-        }
+        ai_seo_verify_ajax_request( 'edit_posts' );
 
         $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
         $field   = isset( $_POST['field'] ) ? sanitize_text_field( wp_unslash( $_POST['field'] ) ) : '';

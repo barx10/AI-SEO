@@ -275,6 +275,37 @@ Funksjoner:
 - **Hastighetsbegrensning**: Maks 30 AI-forespørsler per minutt per bruker
 - Omdirigeringshandlinger beskyttes med nonce-verifisering
 
+## Feilsøking
+
+### 403-feil fra `admin-ajax.php`
+
+En nonce fra WordPress varer i 12 timer. Står en redigeringsside åpen lenger enn
+det, avviser serveren alle AI-knapper med HTTP 403 og en bar `-1` i svaret.
+Programtillegget fornyer nå nonce automatisk via WordPress' heartbeat-API og
+prøver forespørselen på nytt én gang. Klarer den ikke å hente ny nøkkel, vises
+meldingen «Sikkerhetsnøkkelen er utløpt. Last siden på nytt og prøv igjen.»
+
+Analyser som sender hele innlegget (SEO-poengsum, lesbarhet, KI-kvalitet,
+sitatbarhet) sender nå teksten base64-kodet. Rå HTML i forespørselen får
+brannmurer som ModSecurity til å svare 403 før WordPress kjører, og det er
+grunnen til at knapper som bare sender en innleggs-ID fortsatte å virke mens
+resten sluttet.
+
+Fortsetter 403-feilen etter at siden er lastet på nytt, ligger årsaken utenfor
+programtillegget. Vanlige kilder:
+
+- Sikkerhetstillegg (Wordfence, iThemes Security, All-In-One Security) som
+  blokkerer POST mot `wp-admin/admin-ajax.php`
+- Brannmur eller WAF hos webhotellet, eller Cloudflare-regler mot `admin-ajax.php`
+- Mellomlagring av innloggede admin-sider, som serverer en utdatert nonce
+- Feil `WP_HOME`/`WP_SITEURL` slik at forespørselen krysser domene og
+  innloggingsinformasjonskapselen ikke følger med
+
+### «Handlingen ble avvist av WordPress»
+
+Svaret var `0` eller HTTP 400: enten er økten utløpt, eller så er AJAX-handlingen
+ikke registrert. Sjekk at programtillegget er aktivt, og logg inn på nytt.
+
 ## Krav
 
 - WordPress 5.0 eller nyere

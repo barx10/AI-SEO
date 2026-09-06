@@ -849,6 +849,13 @@ td.column-ai_seo_description {
     opacity: 0.6;
 }
 
+/* Failed inline save: the reason sits in the title attribute. */
+.ai-seo-inline-error .ai-seo-inline-value {
+    color: #cc0000;
+    border-bottom: 1px dotted #cc0000;
+    cursor: help;
+}
+
 /* Score badge */
 .ai-seo-col-score {
     display: inline-block;
