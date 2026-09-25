@@ -171,7 +171,7 @@ I meta-boksen på hvert innlegg kan du kjøre en AI-vurdert **sitatbarhet-analys
 | Tydelig forfatter med ekspertise | 15 |
 | Definerte begreper | 15 |
 | Spørsmåls-/påstandsoverskrifter | 15 |
-| Unike data, tall og lister | 20 |
+| Unikt innhold: egne erfaringer, eksempler eller data | 20 |
 | E-E-A-T synlig (dato/forfatter/organisasjon) | 15 |
 
 Resultatet vises som et farget badge atskilt fra SEO-scoren, med en sjekkliste og konkret tilbakemelding per kontroll. Analysen caches i 7 dager for å holde AI-kostnaden lav.

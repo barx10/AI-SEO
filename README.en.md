@@ -196,7 +196,7 @@ In the meta box on each post you can run an AI-assessed **citability analysis** 
 | Clear author with expertise | 15 |
 | Defined terms | 15 |
 | Question/statement headings | 15 |
-| Unique data, numbers, and lists | 20 |
+| Unique content: first-hand experience, examples, or data | 20 |
 | E-E-A-T visible (date/author/organization) | 15 |
 
 The result is shown as a colored badge separate from the SEO score, with a checklist and concrete feedback per check. The analysis is cached for 7 days to keep AI costs low.

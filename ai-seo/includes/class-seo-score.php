@@ -359,7 +359,7 @@ class AI_SEO_Score {
             'author_expert'  => array( 'weight' => 15, 'label' => 'Tydelig forfatter med ekspertisesignal' ),
             'defined_terms'  => array( 'weight' => 15, 'label' => 'Bruker definerte begreper (forklarende setninger)' ),
             'question_heads' => array( 'weight' => 15, 'label' => 'Overskrifter som er spørsmål eller påstander' ),
-            'unique_data'    => array( 'weight' => 20, 'label' => 'Unike data, tall eller lister' ),
+            'unique_data'    => array( 'weight' => 20, 'label' => 'Unikt innhold: egne erfaringer, eksempler eller data' ),
             'eeat_signals'   => array( 'weight' => 15, 'label' => 'E-E-A-T-signal: dato, forfatter, organisasjon synlig' ),
         );
 
@@ -368,7 +368,7 @@ class AI_SEO_Score {
         $job_title = ! empty( $options['schema_person_job_title'] ) ? $options['schema_person_job_title'] : '';
         $bio       = wp_strip_all_tags( get_the_author_meta( 'description', $post->post_author ) );
         $profiles  = ! empty( $options['schema_person_same_as'] ) ? str_replace( "\n", ', ', trim( $options['schema_person_same_as'] ) ) : '';
-        $cache_key = 'ai_seo_citability_' . $post->ID . '_' . md5( $post->post_title . $content . $job_title . $bio . $profiles );
+        $cache_key = 'ai_seo_citability_v2_' . $post->ID . '_' . md5( $post->post_title . $content . $job_title . $bio . $profiles );
         $cached    = get_transient( $cache_key );
         if ( false !== $cached && is_array( $cached ) ) {
             $cached['cached'] = true;
@@ -389,7 +389,7 @@ class AI_SEO_Score {
         $prompt .= "2. author_expert (maks 15): Tydelig forfatter med ekspertisesignal.\n";
         $prompt .= "3. defined_terms (maks 15): Forklarer/definerer sentrale begreper i klare setninger.\n";
         $prompt .= "4. question_heads (maks 15): Overskrifter formulert som spørsmål eller tydelige påstander.\n";
-        $prompt .= "5. unique_data (maks 20): Inneholder unike data, tall eller lister.\n";
+        $prompt .= "5. unique_data (maks 20): Inneholder innhold KI-assistenter ikke finner andre steder: egne erfaringer og eksempler fra praksis, egne vurderinger og konklusjoner, eller egne data, tall og strukturerte lister. Førstehåndserfaring som er konkret og gjenfortellbar teller like mye som tall og tabeller.\n";
         $prompt .= "6. eeat_signals (maks 15): Synlige E-E-A-T-signaler (dato, forfatter, organisasjon).\n\n";
         $prompt .= "Metadata — Forfatter: {$author}; Organisasjon: {$org}; Dato: {$date}.\n\n";
         $prompt .= "Forfatterinfo som vises ved artikkelen og i strukturerte data (schema): Tittel: " . ( $job_title ? $job_title : 'ikke oppgitt' ) . "; Bio: " . ( $bio ? $bio : 'ikke oppgitt' ) . "; Profiler: " . ( $profiles ? $profiles : 'ikke oppgitt' ) . ".\n\n";
