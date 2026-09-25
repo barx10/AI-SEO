@@ -16,6 +16,7 @@ class AI_SEO_Settings_Page {
             'gpt-5-mini',
             'gpt-4.1-mini',
             'gpt-4o',
+            'gemini-3.8-flash',
             'gemini-3.7-flash',
             'gemini-3.6-flash',
             'gemini-3.1-flash-lite',
@@ -30,7 +31,7 @@ class AI_SEO_Settings_Page {
      */
     public static function get_model_migrations() {
         return array(
-            'gemini-3-flash-preview'        => 'gemini-3.7-flash',
+            'gemini-3-flash-preview'        => 'gemini-3.8-flash',
             'gemini-3.1-flash-lite-preview' => 'gemini-3.1-flash-lite',
             'gemini-2.5-flash'              => 'gemini-3.6-flash',
             'gemini-2.5-flash-lite'         => 'gemini-3.1-flash-lite',
@@ -372,6 +373,7 @@ class AI_SEO_Settings_Page {
                 <option value="gpt-4o" <?php selected( $model, 'gpt-4o' ); ?>>GPT-4o</option>
             </optgroup>
             <optgroup label="Google" class="ai-seo-model-group" data-provider="google">
+                <option value="gemini-3.8-flash" <?php selected( $model, 'gemini-3.8-flash' ); ?>>Gemini 3.8 Flash</option>
                 <option value="gemini-3.7-flash" <?php selected( $model, 'gemini-3.7-flash' ); ?>>Gemini 3.7 Flash</option>
                 <option value="gemini-3.6-flash" <?php selected( $model, 'gemini-3.6-flash' ); ?>>Gemini 3.6 Flash</option>
                 <option value="gemini-3.1-flash-lite" <?php selected( $model, 'gemini-3.1-flash-lite' ); ?>>Gemini 3.1 Flash Lite</option>
