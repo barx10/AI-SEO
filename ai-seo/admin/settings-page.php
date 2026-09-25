@@ -204,7 +204,11 @@ class AI_SEO_Settings_Page {
         $sanitized['schema_person_job_title'] = isset( $input['schema_person_job_title'] ) ? sanitize_text_field( $input['schema_person_job_title'] ) : '';
         $sanitized['schema_person_email']     = isset( $input['schema_person_email'] ) ? sanitize_email( $input['schema_person_email'] ) : '';
         $sanitized['schema_person_about_url'] = isset( $input['schema_person_about_url'] ) ? esc_url_raw( $input['schema_person_about_url'] ) : '';
-        $sanitized['schema_person_same_as']   = isset( $input['schema_person_same_as'] ) ? sanitize_textarea_field( $input['schema_person_same_as'] ) : '';
+        // Sanitize each sameAs line as a URL. sanitize_textarea_field() would
+        // strip percent-encoded characters such as %20 and break the link.
+        $same_as = isset( $input['schema_person_same_as'] ) ? preg_split( '/\r\n|\r|\n/', (string) $input['schema_person_same_as'] ) : array();
+        $same_as = array_filter( array_map( 'esc_url_raw', array_map( 'trim', $same_as ) ) );
+        $sanitized['schema_person_same_as']   = implode( "\n", $same_as );
 
         return $sanitized;
     }
