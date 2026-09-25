@@ -52,8 +52,6 @@ class AI_SEO_Schema {
         $title  = $meta_title ? $meta_title : get_the_title( $post_id );
         $desc   = $meta_description ? $meta_description : wp_trim_words( wp_strip_all_tags( $post->post_content ), 30, '...' );
         $url    = get_permalink( $post_id );
-        $author = get_the_author_meta( 'display_name', $post->post_author );
-
         $schema = array(
             '@context'         => 'https://schema.org',
             '@type'            => 'Article',
@@ -62,11 +60,7 @@ class AI_SEO_Schema {
             'url'              => $url,
             'datePublished'    => get_the_date( 'c', $post_id ),
             'dateModified'     => get_the_modified_date( 'c', $post_id ),
-            'author'           => array(
-                '@type' => 'Person',
-                'name'  => $author,
-                'url'   => get_author_posts_url( $post->post_author ),
-            ),
+            'author'           => $this->build_article_author( $post ),
             'publisher'        => array(
                 '@type' => 'Organization',
                 'name'  => get_bloginfo( 'name' ),
@@ -292,23 +286,21 @@ class AI_SEO_Schema {
         $this->render_json_ld( $schema );
     }
 
-    private function maybe_output_person_schema( $options ) {
+    /**
+     * Absolute URL of the site owner's about page.
+     */
+    private function get_person_about_url( $options ) {
         $about_url = ! empty( $options['schema_person_about_url'] )
             ? $options['schema_person_about_url']
             : '/om-laererliv/';
 
-        // Resolve relative URL to absolute for comparison.
-        $about_url_absolute = ( strpos( $about_url, 'http' ) === 0 )
-            ? $about_url
-            : home_url( $about_url );
+        return ( strpos( $about_url, 'http' ) === 0 ) ? $about_url : home_url( $about_url );
+    }
 
-        $is_about_page = is_page() && trailingslashit( get_permalink() ) === trailingslashit( $about_url_absolute );
-
-        // Output full @graph (WebSite + Person) on front page and about page.
-        // On all other pages, output only the Person node for entity recognition.
-        $full_graph = is_front_page() || $is_about_page;
-
-        // Build Person object.
+    /**
+     * Person node for the site owner, built from the Person schema settings.
+     */
+    private function build_person( $options ) {
         $person = array(
             '@type' => 'Person',
             '@id'   => home_url( '/#person' ),
@@ -318,7 +310,7 @@ class AI_SEO_Schema {
             $person['name'] = $options['schema_person_name'];
         }
 
-        $person['url'] = $about_url_absolute;
+        $person['url'] = $this->get_person_about_url( $options );
 
         if ( ! empty( $options['schema_person_job_title'] ) ) {
             $person['jobTitle'] = $options['schema_person_job_title'];
@@ -333,6 +325,50 @@ class AI_SEO_Schema {
                 $person['sameAs'] = array_values( $urls );
             }
         }
+
+        return $person;
+    }
+
+    /**
+     * Article author. On a Person site the author is linked to the site
+     * owner's Person entity so job title and sameAs profiles follow every post.
+     */
+    private function build_article_author( $post ) {
+        $options = get_option( 'ai_seo_options', array() );
+        $name    = get_the_author_meta( 'display_name', $post->post_author );
+
+        if ( isset( $options['schema_org_type'] ) && 'Person' === $options['schema_org_type'] ) {
+            $author = $this->build_person( $options );
+            unset( $author['email'] );
+            if ( empty( $author['name'] ) ) {
+                $author['name'] = $name;
+            }
+        } else {
+            $author = array(
+                '@type' => 'Person',
+                'name'  => $name,
+                'url'   => get_author_posts_url( $post->post_author ),
+            );
+        }
+
+        $bio = get_the_author_meta( 'description', $post->post_author );
+        if ( $bio ) {
+            $author['description'] = wp_strip_all_tags( $bio );
+        }
+
+        return $author;
+    }
+
+    private function maybe_output_person_schema( $options ) {
+        $about_url_absolute = $this->get_person_about_url( $options );
+
+        $is_about_page = is_page() && trailingslashit( get_permalink() ) === trailingslashit( $about_url_absolute );
+
+        // Output full @graph (WebSite + Person) on front page and about page.
+        // On all other pages, output only the Person node for entity recognition.
+        $full_graph = is_front_page() || $is_about_page;
+
+        $person = $this->build_person( $options );
 
         // Build WebSite object.
         $website = array(

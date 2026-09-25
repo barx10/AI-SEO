@@ -364,7 +364,11 @@ class AI_SEO_Score {
         );
 
         $content   = wp_strip_all_tags( $post->post_content );
-        $cache_key = 'ai_seo_citability_' . $post->ID . '_' . md5( $post->post_title . $content );
+        $options   = get_option( 'ai_seo_options', array() );
+        $job_title = ! empty( $options['schema_person_job_title'] ) ? $options['schema_person_job_title'] : '';
+        $bio       = wp_strip_all_tags( get_the_author_meta( 'description', $post->post_author ) );
+        $profiles  = ! empty( $options['schema_person_same_as'] ) ? str_replace( "\n", ', ', trim( $options['schema_person_same_as'] ) ) : '';
+        $cache_key = 'ai_seo_citability_' . $post->ID . '_' . md5( $post->post_title . $content . $job_title . $bio . $profiles );
         $cached    = get_transient( $cache_key );
         if ( false !== $cached && is_array( $cached ) ) {
             $cached['cached'] = true;
@@ -388,6 +392,7 @@ class AI_SEO_Score {
         $prompt .= "5. unique_data (maks 20): Inneholder unike data, tall eller lister.\n";
         $prompt .= "6. eeat_signals (maks 15): Synlige E-E-A-T-signaler (dato, forfatter, organisasjon).\n\n";
         $prompt .= "Metadata — Forfatter: {$author}; Organisasjon: {$org}; Dato: {$date}.\n\n";
+        $prompt .= "Forfatterinfo som vises ved artikkelen og i strukturerte data (schema): Tittel: " . ( $job_title ? $job_title : 'ikke oppgitt' ) . "; Bio: " . ( $bio ? $bio : 'ikke oppgitt' ) . "; Profiler: " . ( $profiles ? $profiles : 'ikke oppgitt' ) . ".\n\n";
         $prompt .= "HTML-innhold:\n{$html_sample}\n\n";
         $prompt .= 'Svar KUN med JSON på formen {"facts_sources":{"points":X,"feedback":"..."},"author_expert":{"points":X,"feedback":"..."},"defined_terms":{"points":X,"feedback":"..."},"question_heads":{"points":X,"feedback":"..."},"unique_data":{"points":X,"feedback":"..."},"eeat_signals":{"points":X,"feedback":"..."}}. Feedback på norsk, maks 1 kort setning.';
 
